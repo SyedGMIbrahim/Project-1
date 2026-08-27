@@ -1,0 +1,591 @@
+from __future__ import annotations
+
+import difflib
+import hashlib
+import json
+import logging
+import os
+import re
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import joblib
+import ollama
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_core.documents import Document
+from pydantic import BaseModel, Field
+
+from ingest import DEFAULT_CHUNK_OVERLAP, DEFAULT_CHUNK_SIZE, build_text_splitter, read_pdf_file, read_text_file
+
+BASE_DIR = Path(__file__).resolve().parent
+MODELS_DIR = BASE_DIR / "models"
+CLASSIFIER_PATH = MODELS_DIR / "symptom_classifier.joblib"
+
+LOGGER = logging.getLogger(__name__)
+RAW_DIR = BASE_DIR / "data" / "raw"
+PERSIST_DIR = BASE_DIR / "chroma_db"
+DEFAULT_COLLECTION_NAME = "medical_documents"
+DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
+DEFAULT_OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+TOP_K = 3
+MENTOR_DATASET_DIR = BASE_DIR / "data" / "mentor_dataset"
+
+
+class QueryRequest(BaseModel):
+    query: str = Field(..., min_length=1, description="User question about the uploaded healthcare documents")
+
+
+class SourceDocument(BaseModel):
+    content: str
+    metadata: Dict[str, Any]
+
+
+class QueryResponse(BaseModel):
+    answer: str
+    source_documents: List[SourceDocument]
+
+
+class UploadResponse(BaseModel):
+    message: str
+    original_file_name: str
+    stored_file_name: str
+    file_type: str
+    total_chunks_indexed: int
+    source_path: str
+
+
+class DocumentRecord(BaseModel):
+    file_name: str
+    source_path: Optional[str] = None
+    file_type: Optional[str] = None
+    upload_date: Optional[str] = None
+    file_size: Optional[int] = None
+    status: str
+    chunk_count: Optional[int] = None
+
+
+class DiagnoseRequest(BaseModel):
+    symptoms: List[str] = Field(..., description="List of symptom names (strings)")
+
+
+class DiagnoseResponse(BaseModel):
+    predicted: str
+    probability: float
+    probabilities: Optional[Dict[str, float]] = None
+
+
+class ExtractRequest(BaseModel):
+    description: str = Field(..., min_length=1, description="Natural language symptom description")
+
+
+class AppState:
+    vector_store: Optional[Chroma] = None
+    embeddings: Optional[HuggingFaceEmbeddings] = None
+    ollama_client: Optional[ollama.Client] = None
+    text_splitter: Optional[Any] = None
+    classifier: Optional[Any] = None
+    classifier_features: Optional[List[str]] = None
+
+
+state = AppState()
+
+
+def build_prompt(query: str, context_chunks: List[str]) -> str:
+    context_block = "\n\n---\n\n".join(context_chunks)
+    return (
+        "You are an expert clinical AI. Using the retrieved context, provide a highly detailed, "
+        "comprehensive, and multi-paragraph answer to the user's question. Explain the reasoning clearly.\n\n"
+        f"Context:\n{context_block}\n\n"
+        f"Question: {query}\n\n"
+        "Detailed Answer:"
+    )
+
+
+def map_extracted_to_features(extracted_list: List[str], valid_features: List[str]) -> List[str]:
+    final_symptoms = set()
+    feature_lower = {f: f.lower().replace("_", " ") for f in valid_features}
+
+    for symptom in extracted_list:
+        symptom_clean = str(symptom).lower().strip()
+        if len(symptom_clean) < 4:
+            continue
+
+        # 1. Strict Fuzzy Matching (Cutoff 0.85 instead of 0.5)
+        matches = difflib.get_close_matches(symptom_clean, feature_lower.values(), n=1, cutoff=0.85)
+        if matches:
+            for orig, lowered in feature_lower.items():
+                if lowered == matches[0]:
+                    final_symptoms.add(orig)
+        else:
+            # 2. Strict Exact Word Matching (Prevents partial word overlaps)
+            for orig, lowered in feature_lower.items():
+                # Pad with spaces to ensure we match whole words only
+                if f" {symptom_clean} " in f" {lowered} " or symptom_clean == lowered:
+                    final_symptoms.add(orig)
+
+    return list(final_symptoms)
+
+
+def extract_symptoms_with_llm(source_text: str, feature_columns: List[str]) -> List[str]:
+    if state.ollama_client is None:
+        raise HTTPException(status_code=503, detail="Ollama client is not ready")
+
+    prompt = f"""
+    Extract all medical symptoms from the following text. Do not summarize. 
+    Respond ONLY with a valid JSON object containing a single key "symptoms" mapped to an array of strings.
+    Example: {{"symptoms": ["runny nose", "congestion", "scratchy throat", "coughing", "sneezing", "body aches", "headache", "fever", "malaise"]}}
+    
+    Text: {source_text}
+    """
+
+    try:
+        response = state.ollama_client.chat(
+            model=DEFAULT_OLLAMA_MODEL,
+            messages=[
+                {"role": "system", "content": "You are a medical extractor. Output only valid JSON."},
+                {"role": "user", "content": prompt},
+            ],
+            format="json",
+        )
+
+        parsed = json.loads(response["message"]["content"])
+        extracted_list = parsed.get("symptoms", [])
+
+        return map_extracted_to_features(extracted_list, feature_columns)
+
+    except Exception as e:
+        LOGGER.exception("Extraction error: %s", e)
+        print(f"Extraction error: {e}")
+        return []
+
+
+def ensure_upload_directory() -> None:
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def validate_upload_file(file_name: str) -> str:
+    suffix = Path(file_name).suffix.lower()
+    if suffix not in {".pdf", ".txt"}:
+        raise HTTPException(status_code=400, detail="Only .pdf and .txt files are accepted")
+    return suffix
+
+
+def sanitize_file_name(file_name: str) -> str:
+    safe_name = Path(file_name).name.strip()
+    if not safe_name:
+        raise HTTPException(status_code=400, detail="Uploaded file name is invalid")
+    return safe_name
+
+
+def list_candidate_files() -> Dict[str, Path]:
+    indexed_directories = [RAW_DIR, MENTOR_DATASET_DIR]
+    candidate_files: Dict[str, Path] = {}
+
+    for directory in indexed_directories:
+        if not directory.exists():
+            continue
+
+        for file_path in directory.rglob("*"):
+            if file_path.is_file() and file_path.suffix.lower() in {".pdf", ".txt"}:
+                candidate_files[str(file_path.resolve())] = file_path
+
+    return candidate_files
+
+
+def format_datetime(timestamp: Optional[float]) -> Optional[str]:
+    if timestamp is None:
+        return None
+
+    return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
+
+
+def get_indexed_document_records(limit: int = 100, offset: int = 0) -> List[DocumentRecord]:
+    if state.vector_store is None:
+        raise HTTPException(status_code=503, detail="Backend resources are not ready")
+
+    chroma_sources: Dict[str, int] = {}
+    chroma_file_types: Dict[str, str] = {}
+
+    # Clamp limit to a safe maximum to protect the underlying SQLite implementation
+    MAX_LIMIT = 1000
+    if limit is None or limit <= 0:
+        limit = 100
+    if limit > MAX_LIMIT:
+        LOGGER.warning("Requested limit %d exceeds max %d, clamping to %d", limit, MAX_LIMIT, MAX_LIMIT)
+        limit = MAX_LIMIT
+
+    try:
+        # Limit the number of metadata rows retrieved to avoid SQLite 'too many SQL variables' errors
+        collection_payload = state.vector_store._collection.get(include=["metadatas"], limit=limit, offset=offset)  # type: ignore[attr-defined]
+    except Exception as exc:
+        LOGGER.exception("Failed to query Chroma metadata")
+        raise HTTPException(status_code=500, detail="Failed to inspect indexed documents") from exc
+
+    metadatas = collection_payload.get("metadatas") or []
+    for metadata in metadatas:
+        if not isinstance(metadata, dict):
+            continue
+
+        source_path = metadata.get("source")
+        if not isinstance(source_path, str) or not source_path:
+            continue
+
+        chroma_sources[source_path] = chroma_sources.get(source_path, 0) + 1
+        if source_path not in chroma_file_types:
+            file_type = metadata.get("file_type")
+            chroma_file_types[source_path] = file_type if isinstance(file_type, str) else Path(source_path).suffix.lstrip(".")
+
+    filesystem_files = list_candidate_files()
+    records: List[DocumentRecord] = []
+
+    for source_path, chunk_count in sorted(chroma_sources.items(), key=lambda item: item[0].lower()):
+        file_path = filesystem_files.get(str(Path(source_path).resolve())) or Path(source_path)
+        exists = file_path.exists()
+        stat_result = file_path.stat() if exists else None
+
+        records.append(
+            DocumentRecord(
+                file_name=file_path.name,
+                source_path=str(file_path) if exists or file_path.exists() else source_path,
+                file_type=chroma_file_types.get(source_path) or file_path.suffix.lstrip("."),
+                upload_date=format_datetime(stat_result.st_mtime if stat_result else None),
+                file_size=stat_result.st_size if stat_result else None,
+                status="indexed" if chunk_count > 0 else "pending",
+                chunk_count=chunk_count,
+            )
+        )
+
+    return records
+
+
+def build_documents_from_upload(file_path: Path, file_type: str) -> List[Document]:
+    if file_type == ".pdf":
+        page_texts = read_pdf_file(file_path)
+        source_documents = [
+            Document(
+                page_content=page_text.strip(),
+                metadata={
+                    "source": str(file_path),
+                    "file_name": file_path.name,
+                    "file_type": "pdf",
+                    "page": page_number,
+                    "page_number": page_number,
+                },
+            )
+        for page_number, page_text in page_texts
+            if page_text.strip()
+        ]
+    else:
+        text = read_text_file(file_path).strip()
+        source_documents = []
+        if text:
+            source_documents.append(
+                Document(
+                    page_content=text,
+                    metadata={
+                        "source": str(file_path),
+                        "file_name": file_path.name,
+                        "file_type": "txt",
+                        "page": None,
+                        "page_number": None,
+                    },
+                )
+            )
+
+    if not source_documents:
+        return []
+
+    splitter = state.text_splitter or build_text_splitter(DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP)
+    chunked_documents = splitter.split_documents(source_documents)
+
+    for chunk_index, document in enumerate(chunked_documents, start=1):
+        document.metadata["chunk_index"] = chunk_index
+        document.metadata["chunk_size"] = len(document.page_content)
+
+    return chunked_documents
+
+
+def persist_uploaded_file(upload_file: UploadFile, file_name: str) -> Tuple[Path, str, int, str]:
+    if state.vector_store is None:
+        raise HTTPException(status_code=503, detail="Backend resources are not ready")
+
+    ensure_upload_directory()
+    suffix = validate_upload_file(file_name)
+    safe_name = sanitize_file_name(file_name)
+
+    payload = upload_file.file.read()
+    if not payload:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+    digest = hashlib.sha1(payload).hexdigest()[:10]
+    target_name = f"{Path(safe_name).stem}-{digest}{suffix}"
+    target_path = RAW_DIR / target_name
+    target_path.write_bytes(payload)
+
+    chunked_documents = build_documents_from_upload(target_path, suffix)
+    if not chunked_documents:
+        raise HTTPException(status_code=400, detail="Uploaded document did not contain any indexable text")
+
+    state.vector_store.add_documents(chunked_documents)
+    if hasattr(state.vector_store, "persist"):
+        state.vector_store.persist()
+
+    return target_path, safe_name, len(chunked_documents), suffix.lstrip(".")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    LOGGER.info("Loading local embeddings, Chroma index, and Ollama client")
+
+    state.embeddings = HuggingFaceEmbeddings(model_name=DEFAULT_EMBEDDING_MODEL)
+    state.vector_store = Chroma(
+        collection_name=DEFAULT_COLLECTION_NAME,
+        persist_directory=str(PERSIST_DIR),
+        embedding_function=state.embeddings,
+    )
+    state.ollama_client = ollama.Client(host=DEFAULT_OLLAMA_HOST)
+    state.text_splitter = build_text_splitter(DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP)
+    # Load ML classifier if available
+    try:
+        if CLASSIFIER_PATH.exists():
+            cls_payload = joblib.load(CLASSIFIER_PATH)
+            if isinstance(cls_payload, dict) and "model" in cls_payload and "features" in cls_payload:
+                state.classifier = cls_payload["model"]
+                state.classifier_features = list(cls_payload["features"])
+                LOGGER.info("Loaded symptom classifier with %d features", len(state.classifier_features))
+            else:
+                # assume direct model object
+                state.classifier = cls_payload
+                state.classifier_features = None
+                LOGGER.info("Loaded symptom classifier (features unknown)")
+    except Exception:
+        LOGGER.exception("Failed to load symptom classifier")
+
+    yield
+
+    state.vector_store = None
+    state.embeddings = None
+    state.ollama_client = None
+    state.text_splitter = None
+    state.classifier = None
+    state.classifier_features = None
+
+
+app = FastAPI(title="Healthcare RAG API", version="1.0.0", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/health")
+def health_check() -> Dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.get("/api/documents", response_model=List[DocumentRecord])
+def list_documents(limit: int = 100, offset: int = 0) -> List[DocumentRecord]:
+    """List indexed documents with a safe limit and optional offset to avoid DB overload.
+
+    Query params:
+    - limit: number of metadata rows to retrieve (default 100, max 1000)
+    - offset: offset into the metadata rows for pagination
+    """
+    return get_indexed_document_records(limit=limit, offset=offset)
+
+
+@app.get("/api/symptoms")
+def list_symptoms() -> List[str]:
+    if state.classifier_features is None:
+        raise HTTPException(status_code=404, detail="No symptom feature list available")
+    return state.classifier_features
+
+
+@app.post("/api/diagnose", response_model=DiagnoseResponse)
+def diagnose(req: DiagnoseRequest) -> DiagnoseResponse:
+    if state.classifier is None or state.classifier_features is None:
+        raise HTTPException(status_code=503, detail="Classifier is not loaded")
+
+    # Build feature vector in the trained order
+    feature_names = state.classifier_features
+    selected = set([s.lower() for s in req.symptoms or []])
+
+    x = [1 if fname.lower() in selected else 0 for fname in feature_names]
+
+    try:
+        import numpy as np
+
+        arr = np.array(x).reshape(1, -1)
+        if hasattr(state.classifier, "predict_proba"):
+            proba = state.classifier.predict_proba(arr)[0]
+            classes = list(state.classifier.classes_)
+            sorted_predictions = sorted(zip(classes, proba), key=lambda item: item[1], reverse=True)
+
+            top_pred_class, top_pred_prob = sorted_predictions[0]
+            pred = str(top_pred_class)
+            probability = float(top_pred_prob)
+
+            # Top 3 predicted diseases and their exact probability percentages
+            top_3 = sorted_predictions[:3]
+            probs = {str(c): float(p) for c, p in top_3}
+        else:
+            pred = state.classifier.predict(arr)[0]
+            probability = 1.0
+            probs = {str(pred): 1.0}
+
+    except Exception as exc:
+        LOGGER.exception("Diagnosis failed")
+        raise HTTPException(status_code=500, detail="Failed to run diagnosis") from exc
+
+    return DiagnoseResponse(predicted=str(pred), probability=probability, probabilities=probs)
+
+
+@app.post("/api/extract-symptoms")
+async def extract_symptoms(request: dict):
+    text = request.get("text", "") or request.get("description", "")
+    feature_columns = state.classifier_features or []
+    if not text:
+        return {"symptoms": []}
+
+    prompt = f"""
+    Extract all medical symptoms from the following text. Do not summarize. 
+    Respond ONLY with a valid JSON object containing a single key "symptoms" mapped to an array of strings.
+    Example: {{"symptoms": ["runny nose", "congestion", "scratchy throat", "coughing", "sneezing", "body aches", "headache", "fever", "malaise"]}}
+    
+    Text: {text}
+    """
+    try:
+        if state.ollama_client is None:
+            raise RuntimeError("Ollama client is not initialized")
+
+        response = state.ollama_client.chat(
+            model=DEFAULT_OLLAMA_MODEL,
+            messages=[
+                {"role": "system", "content": "You are a medical extractor. Output only valid JSON."},
+                {"role": "user", "content": prompt},
+            ],
+            format="json",
+        )
+
+        parsed = json.loads(response["message"]["content"])
+        extracted_list = parsed.get("symptoms", [])
+
+        matched_symptoms = map_extracted_to_features(extracted_list, feature_columns)
+        return {"symptoms": matched_symptoms}
+    except Exception as e:
+        LOGGER.exception("Extraction error: %s", e)
+        print(f"Extraction error: {e}")
+        return {"symptoms": []}
+
+
+@app.post("/api/extract-from-docs")
+def extract_symptoms_from_docs() -> Dict[str, List[str]]:
+    if state.classifier_features is None:
+        raise HTTPException(status_code=404, detail="No symptom feature list available")
+    if state.vector_store is None:
+        raise HTTPException(status_code=503, detail="Vector store is not ready")
+
+    query_text = "patient symptoms, chief complaint, physical signs, clinical presentation"
+    try:
+        retrieved_documents = state.vector_store.similarity_search(query_text, k=5)
+    except Exception as exc:
+        LOGGER.exception("Vector search failed for extract-from-docs")
+        raise HTTPException(status_code=500, detail="Failed to retrieve document context") from exc
+
+    if not retrieved_documents:
+        return {"symptoms": []}
+
+    context_block = "\n\n".join([doc.page_content for doc in retrieved_documents if doc.page_content])
+    if not context_block.strip():
+        return {"symptoms": []}
+
+    feature_columns = state.classifier_features
+    final_symptoms = extract_symptoms_with_llm(source_text=context_block, feature_columns=feature_columns)
+    return {"symptoms": final_symptoms}
+
+
+@app.post("/api/upload", response_model=UploadResponse)
+async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
+    if file.filename is None:
+        raise HTTPException(status_code=400, detail="Uploaded file is missing a filename")
+
+    try:
+        saved_path, original_file_name, total_chunks_indexed, file_type = persist_uploaded_file(file, file.filename)
+    finally:
+        await file.close()
+
+    return UploadResponse(
+        message="File uploaded and indexed successfully",
+        original_file_name=original_file_name,
+        stored_file_name=saved_path.name,
+        file_type=file_type,
+        total_chunks_indexed=total_chunks_indexed,
+        source_path=str(saved_path),
+    )
+
+
+@app.post("/api/query", response_model=QueryResponse)
+def query_documents(payload: QueryRequest) -> QueryResponse:
+    if state.vector_store is None or state.ollama_client is None:
+        raise HTTPException(status_code=503, detail="Backend resources are not ready")
+
+    query_text = payload.query.strip()
+    if not query_text:
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+
+    try:
+        retrieved_documents = state.vector_store.similarity_search(query_text, k=TOP_K)
+    except Exception as exc:
+        LOGGER.exception("Vector search failed")
+        raise HTTPException(status_code=500, detail="Failed to retrieve supporting context") from exc
+
+    if not retrieved_documents:
+        raise HTTPException(status_code=404, detail="No relevant context found in the local documents")
+
+    context_chunks = [document.page_content for document in retrieved_documents]
+    prompt = build_prompt(query_text, context_chunks)
+
+    try:
+        ollama_response = state.ollama_client.chat(
+            model=DEFAULT_OLLAMA_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an expert clinical AI. Using the retrieved context, provide a highly "
+                        "detailed, comprehensive, and multi-paragraph answer to the user's question. "
+                        "Explain the reasoning clearly."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            options={"temperature": 0},
+        )
+    except Exception as exc:
+        LOGGER.exception("Ollama generation failed")
+        raise HTTPException(status_code=500, detail="Failed to generate an answer with the local Ollama model") from exc
+
+    answer_text = ollama_response["message"]["content"].strip()
+    source_documents = [
+        SourceDocument(content=document.page_content, metadata=dict(document.metadata or {}))
+        for document in retrieved_documents
+    ]
+
+    return QueryResponse(answer=answer_text, source_documents=source_documents)
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
