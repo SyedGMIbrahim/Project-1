@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import joblib
+import numpy as np
 import ollama
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,6 +20,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
 from pydantic import BaseModel, Field
+from sklearn.metrics.pairwise import cosine_similarity
 
 from ingest import DEFAULT_CHUNK_OVERLAP, DEFAULT_CHUNK_SIZE, build_text_splitter, read_pdf_file, read_text_file
 
@@ -35,6 +37,79 @@ DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
 DEFAULT_OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 TOP_K = 3
 MENTOR_DATASET_DIR = BASE_DIR / "data" / "mentor_dataset"
+
+SYNONYMS_FILE = BASE_DIR.parent / "scratch" / "generated_synonyms.json"
+
+CURATED_SYNONYMS = {
+    "headache": ["headache", "throbbing pain", "pulsing pain", "pounding head", "throbbing pulsing pain on one side of the head"],
+    "coryza": ["runny nose", "coryza"],
+    "feeling ill": ["feeling ill", "malaise", "general feeling of being unwell"],
+    "ache all over": ["ache all over", "body aches", "body pain"],
+    "fever": ["fever", "low-grade fever", "high temperature"],
+    "nausea": ["nausea", "nauseous", "feel sick to stomach"],
+    "sore throat": ["sore throat", "scratchy throat", "throat hurts"],
+    "nasal congestion": ["nasal congestion", "stuffy nose", "congestion"],
+    "cough": ["cough", "coughing"],
+    "frontal headache": ["frontal headache", "front of head hurts"],
+    "frequent urination": ["frequent urination", "urinary frequency", "urinary urgency"],
+    "involuntary urination": ["involuntary urination", "urinary incontinence"],
+    # Eye-specific synonyms — critical for disambiguation against non-eye features
+    "white discharge from eye": [
+        "white discharge from eye", "eye discharge", "crusty eye discharge",
+        "thick yellowish eye discharge", "thick yellowish discharge from eye",
+        "thick yellowish discharge", "yellow eye discharge", "yellowish discharge from eye",
+        "discharge from eye", "eye mucus", "crusty eyelashes", "crusty eyelash discharge",
+        "crusting on eyelashes", "crusting around eye"
+    ],
+    "foreign body sensation in eye": [
+        "foreign body sensation in eye", "gritty eye", "gritty right eye",
+        "grittiness in eye", "grittiness in right eye", "sand in eye",
+        "feeling of sand in eye", "gritty sensation in eye", "eye feels gritty",
+        "eye feels like sand", "foreign body feeling in eye"
+    ],
+    "lacrimation": [
+        "lacrimation", "watery eye", "watering eye", "watering right eye",
+        "watery right eye", "excessive tearing", "eye watering", "tearing of eye"
+    ],
+    "eye redness": [
+        "eye redness", "red eye", "red right eye", "red left eye",
+        "bloodshot eye", "eyes red", "redness of eye"
+    ],
+    "itchiness of eye": [
+        "itchiness of eye", "itchy eye", "itchy right eye", "itchy left eye",
+        "eye itching", "itching in eye"
+    ],
+    "foot or toe swelling": [
+        "foot or toe swelling", "swollen big toe", "swelling in big toe",
+        "swollen foot", "toe swelling", "swollen toe"
+    ],
+    "foot or toe pain": [
+        "foot or toe pain", "pain in big toe", "big toe pain",
+        "toe pain", "foot pain", "sudden severe pain in big toe",
+        "painful big toe", "pain in toe"
+    ],
+    # Peripheral neuropathy — tingling must map to paresthesia, NOT loss of sensation
+    # loss of sensation = negative/hypoesthetic; paresthesia = positive/tingling/pins-and-needles
+    "paresthesia": [
+        "paresthesia", "tingling", "tingling in feet", "tingling in hands",
+        "tingling in fingers", "tingling in toes", "pins and needles",
+        "pins and needles in feet", "numbness and tingling", "prickling sensation",
+        "burning tingling sensation", "tingling sensation in limbs"
+    ],
+}
+
+try:
+    with open(SYNONYMS_FILE, "r") as f:
+        FEATURE_SYNONYMS = json.load(f)
+        # Merge curated synonyms, extending lists where necessary
+        for k, v in CURATED_SYNONYMS.items():
+            if k in FEATURE_SYNONYMS:
+                FEATURE_SYNONYMS[k].extend(v)
+            else:
+                FEATURE_SYNONYMS[k] = v
+except Exception as e:
+    LOGGER.warning(f"Failed to load synonyms from {SYNONYMS_FILE}: {e}")
+    FEATURE_SYNONYMS = CURATED_SYNONYMS
 
 
 class QueryRequest(BaseModel):
@@ -91,6 +166,8 @@ class AppState:
     text_splitter: Optional[Any] = None
     classifier: Optional[Any] = None
     classifier_features: Optional[List[str]] = None
+    feature_embeddings: Optional[Any] = None
+    embedding_to_feature: Optional[List[str]] = None
 
 
 state = AppState()
@@ -109,49 +186,141 @@ def build_prompt(query: str, context_chunks: List[str]) -> str:
 
 def map_extracted_to_features(extracted_list: List[str], valid_features: List[str]) -> List[str]:
     final_symptoms = set()
-    feature_lower = {f: f.lower().replace("_", " ") for f in valid_features}
+    unmapped_symptoms = []
+    feature_lower = [f.lower().replace("_", " ") for f in valid_features]
 
     for symptom in extracted_list:
         symptom_clean = str(symptom).lower().strip()
         if len(symptom_clean) < 4:
+            unmapped_symptoms.append(symptom_clean)
             continue
+            
+        LOGGER.info("Mapping extracted symptom: '%s'", symptom_clean)
 
-        # 1. Strict Fuzzy Matching (Cutoff 0.85 instead of 0.5)
-        matches = difflib.get_close_matches(symptom_clean, feature_lower.values(), n=1, cutoff=0.85)
-        if matches:
-            for orig, lowered in feature_lower.items():
-                if lowered == matches[0]:
-                    final_symptoms.add(orig)
-        else:
-            # 2. Strict Exact Word Matching (Prevents partial word overlaps)
-            for orig, lowered in feature_lower.items():
-                # Pad with spaces to ensure we match whole words only
-                if f" {symptom_clean} " in f" {lowered} " or symptom_clean == lowered:
-                    final_symptoms.add(orig)
+        # 1. Fast-path: Exact or near-exact difflib string match
+        best_ratio = 0
+        best_orig = None
+        for orig, lowered in zip(valid_features, feature_lower):
+            ratio = difflib.SequenceMatcher(None, symptom_clean, lowered).ratio()
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best_orig = orig
+
+        if best_ratio > 0.9 and best_orig:
+            LOGGER.info("  -> Selected via fast-path (ratio=%.3f): '%s'", best_ratio, best_orig)
+            final_symptoms.add(best_orig)
+            continue
+            
+        # 2. Semantic Embedding Similarity Match
+        if state.embeddings is None or state.feature_embeddings is None or state.embedding_to_feature is None:
+            LOGGER.warning("  -> Dropped (Embeddings not initialized)")
+            continue
+            
+        phrase_emb = np.array(state.embeddings.embed_query(symptom_clean)).reshape(1, -1)
+        sims = cosine_similarity(phrase_emb, state.feature_embeddings)[0]
+        
+        top_indices = sims.argsort()[-5:][::-1]
+        
+        for idx in top_indices:
+            LOGGER.info("  Candidate: '%s' (score: %.3f)", state.embedding_to_feature[idx], sims[idx])
+
+        # Anatomical conflict guards and Taste gap guard
+        EYE_TERMS = {"eye", "ocular", "eyelash", "eyelid", "conjunctiv", "optic", "pupil", "iris", "gritty", "watery", "lacrimation"}
+        NASAL_TERMS = {"nasal", "nose", "sinus", "smell"}
+        TASTE_TERMS = {"taste", "ageusia", "dysgeusia", "flavor"}
+        
+        GENITAL_FEATURES = {"vaginal", "penile", "genital", "vulvar", "scrotum", "testes"}
+        EYE_FEATURES = {"eye", "eyelid", "conjunctiva", "vision"}
+        MOUTH_PAIN_FEATURES = {"mouth pain", "oral pain", "pain in gums", "toothache"}
+        
+        phrase_has_eye = any(t in symptom_clean for t in EYE_TERMS)
+        phrase_has_nasal = any(t in symptom_clean for t in NASAL_TERMS)
+        phrase_has_taste = any(t in symptom_clean for t in TASTE_TERMS)
+        
+        def is_conflict(phrase, candidate_lower):
+            # Eye context -> Genital feature
+            if phrase_has_eye and any(g in candidate_lower for g in GENITAL_FEATURES): return True
+            # Nasal context -> Eye feature or Genital feature
+            if phrase_has_nasal and any(g in candidate_lower for g in EYE_FEATURES.union(GENITAL_FEATURES)): return True
+            # Taste context -> Mouth pain feature
+            if phrase_has_taste and any(g in candidate_lower for g in MOUTH_PAIN_FEATURES): return True
+            return False
+
+        valid_candidates = []
+        seen_features = set()
+        
+        for idx in top_indices:
+            candidate_orig = state.embedding_to_feature[idx]
+            candidate_lower = candidate_orig.lower()
+            score = sims[idx]
+            
+            if score < 0.65:
+                continue
+                
+            if is_conflict(symptom_clean, candidate_lower):
+                LOGGER.warning("  -> Rejected '%s' for phrase '%s' (anatomical/context conflict).", candidate_orig, symptom_clean)
+                continue
+                
+            if candidate_orig not in seen_features:
+                valid_candidates.append((candidate_orig, score))
+                seen_features.add(candidate_orig)
+
+        if not valid_candidates:
+            LOGGER.info("  -> Unmapped (no valid candidates >= 0.65 or all conflicted)")
+            unmapped_symptoms.append(symptom_clean)
+            continue
+            
+        best_orig, best_score = valid_candidates[0]
+        
+        if len(valid_candidates) > 1:
+            runner_up_orig, runner_up_score = valid_candidates[1]
+            if (best_score - runner_up_score) <= 0.04:
+                # Margin near-tie
+                LOGGER.warning("  -> Rejected '%s' due to margin near-tie with '%s' (diff: %.3f)", best_orig, runner_up_orig, best_score - runner_up_score)
+                unmapped_symptoms.append(symptom_clean)
+                continue
+
+        LOGGER.info("  -> Selected via semantics: '%s' (score: %.3f)", best_orig, best_score)
+        final_symptoms.add(best_orig)
+
+    if unmapped_symptoms:
+        LOGGER.warning("Symptoms described but not supported by current symptom schema: %s", ", ".join(unmapped_symptoms))
 
     return list(final_symptoms)
 
+SYMPTOM_EXTRACTION_PROMPT_TEMPLATE = """
+You are a thorough medical symptom extractor. Your task is to read the text below and extract EVERY SINGLE symptom or physical complaint mentioned, without exception.
+
+Rules:
+1. Extract ALL symptoms — do not stop after the first one. Read the entire text and list every symptom.
+2. Preserve anatomical and contextual specificity: write "swelling in big toe" not "swelling", "crusty eye discharge" not "discharge", "gritty eye sensation" not "eye discomfort".
+3. Treat each distinct complaint as a separate item (e.g. redness, itchiness, discharge, gritty sensation, watering are all separate entries).
+4. Do NOT summarize or group symptoms together.
+5. Respond ONLY with a valid JSON object: {{"symptoms": ["symptom 1", "symptom 2", ...]}}
+
+Example for a text describing 5 symptoms: {{"symptoms": ["runny nose", "congestion", "scratchy throat", "coughing", "sneezing"]}}
+
+Text: {source_text}
+"""
 
 def extract_symptoms_with_llm(source_text: str, feature_columns: List[str]) -> List[str]:
     if state.ollama_client is None:
         raise HTTPException(status_code=503, detail="Ollama client is not ready")
 
-    prompt = f"""
-    Extract all medical symptoms from the following text. Do not summarize. 
-    Respond ONLY with a valid JSON object containing a single key "symptoms" mapped to an array of strings.
-    Example: {{"symptoms": ["runny nose", "congestion", "scratchy throat", "coughing", "sneezing", "body aches", "headache", "fever", "malaise"]}}
-    
-    Text: {source_text}
-    """
+    prompt = SYMPTOM_EXTRACTION_PROMPT_TEMPLATE.format(source_text=source_text)
 
     try:
         response = state.ollama_client.chat(
             model=DEFAULT_OLLAMA_MODEL,
             messages=[
-                {"role": "system", "content": "You are a medical extractor. Output only valid JSON."},
+                {"role": "system", "content": "You are a thorough medical symptom extractor. You MUST extract every symptom mentioned in the text without exception. Output only valid JSON."},
                 {"role": "user", "content": prompt},
             ],
             format="json",
+            options={
+                "temperature": 0.0,  # Deterministic — eliminates sampling variance across runs
+                "num_predict": 512,  # Enough tokens for a full symptom list without truncation
+            },
         )
 
         parsed = json.loads(response["message"]["content"])
@@ -342,6 +511,7 @@ def persist_uploaded_file(upload_file: UploadFile, file_name: str) -> Tuple[Path
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    LOGGER.info(f"Active extraction prompt template: {SYMPTOM_EXTRACTION_PROMPT_TEMPLATE}")
     LOGGER.info("Loading local embeddings, Chroma index, and Ollama client")
 
     state.embeddings = HuggingFaceEmbeddings(model_name=DEFAULT_EMBEDDING_MODEL)
@@ -353,20 +523,39 @@ async def lifespan(_: FastAPI):
     state.ollama_client = ollama.Client(host=DEFAULT_OLLAMA_HOST)
     state.text_splitter = build_text_splitter(DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP)
     # Load ML classifier if available
+    if not CLASSIFIER_PATH.exists():
+        raise FileNotFoundError(f"Symptom classifier model not found at {CLASSIFIER_PATH}")
+
     try:
-        if CLASSIFIER_PATH.exists():
-            cls_payload = joblib.load(CLASSIFIER_PATH)
-            if isinstance(cls_payload, dict) and "model" in cls_payload and "features" in cls_payload:
-                state.classifier = cls_payload["model"]
-                state.classifier_features = list(cls_payload["features"])
-                LOGGER.info("Loaded symptom classifier with %d features", len(state.classifier_features))
-            else:
-                # assume direct model object
-                state.classifier = cls_payload
-                state.classifier_features = None
-                LOGGER.info("Loaded symptom classifier (features unknown)")
-    except Exception:
+        cls_payload = joblib.load(CLASSIFIER_PATH)
+        if isinstance(cls_payload, dict) and "model" in cls_payload and "features" in cls_payload:
+            state.classifier = cls_payload["model"]
+            state.classifier_features = list(cls_payload["features"])
+            LOGGER.info("Loaded symptom classifier with %d features", len(state.classifier_features))
+            
+            # Precompute embeddings for all features and their synonyms
+            LOGGER.info("Computing semantic embeddings for feature mapping...")
+            embedding_strings = []
+            embedding_feature_map = []
+            
+            for f in state.classifier_features:
+                clean_f = f.lower().replace("_", " ")
+                synonyms = FEATURE_SYNONYMS.get(clean_f, [clean_f])
+                for syn in synonyms:
+                    embedding_strings.append(syn)
+                    embedding_feature_map.append(f)
+                
+            state.feature_embeddings = np.array(state.embeddings.embed_documents(embedding_strings))
+            state.embedding_to_feature = embedding_feature_map
+            LOGGER.info("Successfully cached %d feature embeddings for %d features.", len(embedding_strings), len(state.classifier_features))
+        else:
+            # assume direct model object
+            state.classifier = cls_payload
+            state.classifier_features = None
+            LOGGER.info("Loaded symptom classifier (features unknown)")
+    except Exception as e:
         LOGGER.exception("Failed to load symptom classifier")
+        raise RuntimeError(f"Failed to load symptom classifier: {e}") from e
 
     yield
 
@@ -448,6 +637,16 @@ def diagnose(req: DiagnoseRequest) -> DiagnoseResponse:
         LOGGER.exception("Diagnosis failed")
         raise HTTPException(status_code=500, detail="Failed to run diagnosis") from exc
 
+    # Abstain when top confidence is below threshold — surface top candidate
+    # in probabilities dict so the frontend can optionally show "X suspected"
+    ABSTENTION_THRESHOLD = 0.65
+    if probability < ABSTENTION_THRESHOLD:
+        LOGGER.info(
+            "Abstaining: top prediction '%s' at %.1f%% is below %.0f%% threshold",
+            pred, probability * 100, ABSTENTION_THRESHOLD * 100
+        )
+        pred = "Non-specific symptoms (low confidence)"
+
     return DiagnoseResponse(predicted=str(pred), probability=probability, probabilities=probs)
 
 
@@ -458,35 +657,8 @@ async def extract_symptoms(request: dict):
     if not text:
         return {"symptoms": []}
 
-    prompt = f"""
-    Extract all medical symptoms from the following text. Do not summarize. 
-    Respond ONLY with a valid JSON object containing a single key "symptoms" mapped to an array of strings.
-    Example: {{"symptoms": ["runny nose", "congestion", "scratchy throat", "coughing", "sneezing", "body aches", "headache", "fever", "malaise"]}}
-    
-    Text: {text}
-    """
-    try:
-        if state.ollama_client is None:
-            raise RuntimeError("Ollama client is not initialized")
-
-        response = state.ollama_client.chat(
-            model=DEFAULT_OLLAMA_MODEL,
-            messages=[
-                {"role": "system", "content": "You are a medical extractor. Output only valid JSON."},
-                {"role": "user", "content": prompt},
-            ],
-            format="json",
-        )
-
-        parsed = json.loads(response["message"]["content"])
-        extracted_list = parsed.get("symptoms", [])
-
-        matched_symptoms = map_extracted_to_features(extracted_list, feature_columns)
-        return {"symptoms": matched_symptoms}
-    except Exception as e:
-        LOGGER.exception("Extraction error: %s", e)
-        print(f"Extraction error: {e}")
-        return {"symptoms": []}
+    matched_symptoms = extract_symptoms_with_llm(text, feature_columns)
+    return {"symptoms": matched_symptoms}
 
 
 @app.post("/api/extract-from-docs")

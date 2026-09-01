@@ -94,7 +94,12 @@ def train(csv_path: Path, output_dir: Path, test_size: float = 0.2, random_state
     # Apply SMOTE to balance rare disease classes in training data
     LOGGER.info("Applying SMOTE to balance training data...")
     smote = SMOTE(random_state=random_state)
-    X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
+    X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)  # type: ignore
+    
+    # Help the type checker understand the return types
+    assert isinstance(X_train_resampled, pd.DataFrame)
+    assert isinstance(y_train_resampled, pd.Series)
+
     LOGGER.info(
         "Training data resampled: original shape %s -> new shape %s",
         X_train.shape, X_train_resampled.shape
