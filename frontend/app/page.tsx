@@ -56,7 +56,11 @@ export default function Page() {
   const [availableSymptoms, setAvailableSymptoms] = useState<string[]>([]);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [diagnosisLoading, setDiagnosisLoading] = useState(false);
-  const [diagnosisResult, setDiagnosisResult] = useState<{ predicted: string; probability: number } | null>(null);
+  const [diagnosisResult, setDiagnosisResult] = useState<{
+    predicted: string;
+    probability: number;
+    probabilities?: Record<string, number>;
+  } | null>(null);
   const DIAGNOSE_URL = "http://localhost:8000/api/diagnose";
   const EXTRACT_URL = "http://localhost:8000/api/extract-symptoms";
   const EXTRACT_FROM_DOCS_URL = "http://localhost:8000/api/extract-from-docs";
@@ -209,7 +213,11 @@ export default function Page() {
       }
 
       const data = await res.json();
-      setDiagnosisResult({ predicted: data.predicted, probability: data.probability });
+      setDiagnosisResult({
+        predicted: data.predicted,
+        probability: data.probability,
+        probabilities: data.probabilities,
+      });
       showNotification("success", `Predicted: ${data.predicted} (${Math.round(data.probability * 100)}%)`);
     } catch (err) {
       showNotification("error", err instanceof Error ? err.message : "Diagnosis failed");
@@ -621,13 +629,30 @@ export default function Page() {
               </button>
               {diagnosisResult ? (
                 <div className="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800 ring-1 ring-emerald-100">
-                  <strong>{diagnosisResult.predicted}</strong> - {Math.round(diagnosisResult.probability * 100)}% confidence
+                  <div className="font-semibold">{diagnosisResult.predicted}</div>
+                  {diagnosisResult.probabilities && Object.keys(diagnosisResult.probabilities).length > 0 ? (
+                    <div className="mt-1 flex flex-wrap gap-2 text-xs text-emerald-700">
+                      {Object.entries(diagnosisResult.probabilities).map(([cand, prob]) => (
+                        <span key={cand} className="rounded-md bg-emerald-100/80 px-1.5 py-0.5 font-medium">
+                          {cand}: {Math.round(prob * 100)}%
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-emerald-600">({Math.round(diagnosisResult.probability * 100)}% confidence)</span>
+                  )}
                   <button
                     type="button"
-                    className="ml-3 font-semibold text-plum-700 underline underline-offset-2"
-                    onClick={() => void searchGuidelines(diagnosisResult.predicted)}
+                    className="mt-2 inline-block font-semibold text-plum-700 underline underline-offset-2"
+                    onClick={() => {
+                      const target =
+                        diagnosisResult.predicted.includes("Non-specific") && diagnosisResult.probabilities
+                          ? Object.keys(diagnosisResult.probabilities)[0] || diagnosisResult.predicted
+                          : diagnosisResult.predicted;
+                      void searchGuidelines(target);
+                    }}
                   >
-                    Search Guidelines
+                    Search Clinical Guidelines &rarr;
                   </button>
                 </div>
               ) : null}
