@@ -195,11 +195,11 @@ def train(csv_path: Path, output_dir: Path, test_size: float = 0.2, random_state
     acc = test_acc
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    model_path = output_dir / "symptom_classifier_augmented.joblib"
-    # Save both model and feature list
-    joblib.dump({"model": clf, "features": feature_columns}, model_path)
+    model_path = output_dir / "symptom_classifier.joblib"
+    # Save both model and feature list with compression
+    joblib.dump({"model": clf, "features": feature_columns}, model_path, compress=3)
 
-    LOGGER.info("Model saved to %s", model_path)
+    LOGGER.info("Model saved to %s (compressed)", model_path)
 
     if acc < 0.9:
         LOGGER.warning(

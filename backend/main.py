@@ -6,6 +6,9 @@ import json
 import logging
 import os
 import re
+
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -33,82 +36,104 @@ RAW_DIR = BASE_DIR / "data" / "raw"
 PERSIST_DIR = BASE_DIR / "chroma_db"
 DEFAULT_COLLECTION_NAME = "medical_documents"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
+DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1")
 DEFAULT_OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 TOP_K = 3
 MENTOR_DATASET_DIR = BASE_DIR / "data" / "mentor_dataset"
 
-SYNONYMS_FILE = BASE_DIR.parent / "scratch" / "generated_synonyms.json"
+SYNONYMS_FILE = BASE_DIR / "data" / "synonyms.json"
+FALLBACK_SYNONYMS_FILE = BASE_DIR.parent / "scratch" / "generated_synonyms.json"
 
 CURATED_SYNONYMS = {
-    "headache": ["headache", "throbbing pain", "pulsing pain", "pounding head", "throbbing pulsing pain on one side of the head"],
-    "coryza": ["runny nose", "coryza"],
-    "feeling ill": ["feeling ill", "malaise", "general feeling of being unwell"],
-    "ache all over": ["ache all over", "body aches", "body pain"],
-    "fever": ["fever", "low-grade fever", "high temperature"],
-    "nausea": ["nausea", "nauseous", "feel sick to stomach"],
-    "sore throat": ["sore throat", "scratchy throat", "throat hurts"],
-    "nasal congestion": ["nasal congestion", "stuffy nose", "congestion"],
-    "cough": ["cough", "coughing"],
-    "frontal headache": ["frontal headache", "front of head hurts"],
-    "frequent urination": ["frequent urination", "urinary frequency", "urinary urgency"],
-    "involuntary urination": ["involuntary urination", "urinary incontinence"],
+    "headache": ["headache", "throbbing pain", "pulsing pain", "pounding head", "throbbing pulsing pain on one side of the head", "migraine", "head pain"],
+    "coryza": ["runny nose", "coryza", "rhinorrhea", "running nose"],
+    "feeling ill": ["feeling ill", "malaise", "general feeling of being unwell", "feeling unwell", "sluggish"],
+    "ache all over": ["ache all over", "body aches", "body pain", "generalized body aches", "muscle aches all over"],
+    "fever": ["fever", "low-grade fever", "high temperature", "pyrexia", "elevated temperature", "febrile"],
+    "nausea": ["nausea", "nauseous", "feel sick to stomach", "feeling queasy", "sick to my stomach"],
+    "sore throat": ["sore throat", "scratchy throat", "throat hurts", "throat pain", "raw throat", "pharyngitis"],
+    "nasal congestion": ["nasal congestion", "stuffy nose", "congestion", "blocked nose", "sinus congestion"],
+    "cough": ["cough", "coughing", "dry cough", "productive cough", "persistent cough"],
+    "frontal headache": ["frontal headache", "front of head hurts", "sinus headache", "forehead headache", "facial pressure"],
+    "frequent urination": ["frequent urination", "urinary frequency", "urinary urgency", "peeing all the time", "need to pee often", "urinating frequently", "polyuria"],
+    "involuntary urination": ["involuntary urination", "urinary incontinence", "leaking urine", "cannot hold urine", "loss of bladder control"],
+    "painful urination": ["painful urination", "burning pain when i pee", "burning urination", "dysuria", "hurts to pee", "pain when urinating", "burning sensation when peeing"],
+    "lower abdominal pain": ["lower abdominal pain", "lower stomach hurts", "pelvic pain", "lower belly pain", "suprapubic pain", "cramping in lower abdomen"],
     # Eye-specific synonyms — critical for disambiguation against non-eye features
     "white discharge from eye": [
         "white discharge from eye", "eye discharge", "crusty eye discharge",
         "thick yellowish eye discharge", "thick yellowish discharge from eye",
         "thick yellowish discharge", "yellow eye discharge", "yellowish discharge from eye",
         "discharge from eye", "eye mucus", "crusty eyelashes", "crusty eyelash discharge",
-        "crusting on eyelashes", "crusting around eye"
+        "crusting on eyelashes", "crusting around eye", "pus from eye"
     ],
     "foreign body sensation in eye": [
-        "foreign body sensation in eye", "gritty eye", "gritty right eye",
-        "grittiness in eye", "grittiness in right eye", "sand in eye",
+        "foreign body sensation in eye", "gritty eye", "gritty right eye", "gritty left eye",
+        "grittiness in eye", "grittiness in right eye", "grittiness in left eye", "sand in eye",
         "feeling of sand in eye", "gritty sensation in eye", "eye feels gritty",
-        "eye feels like sand", "foreign body feeling in eye"
+        "eye feels like sand", "foreign body feeling in eye", "gritty sensation"
     ],
     "lacrimation": [
-        "lacrimation", "watery eye", "watering eye", "watering right eye",
-        "watery right eye", "excessive tearing", "eye watering", "tearing of eye"
+        "lacrimation", "watery eye", "watering eye", "watering right eye", "watering left eye",
+        "watery right eye", "watery left eye", "excessive tearing", "eye watering", "tearing of eye", "eyes watering constantly"
     ],
     "eye redness": [
         "eye redness", "red eye", "red right eye", "red left eye",
-        "bloodshot eye", "eyes red", "redness of eye"
+        "bloodshot eye", "eyes red", "redness of eye", "pink eye"
     ],
     "itchiness of eye": [
         "itchiness of eye", "itchy eye", "itchy right eye", "itchy left eye",
-        "eye itching", "itching in eye"
+        "eye itching", "itching in eye", "itchy eyes"
     ],
     "foot or toe swelling": [
         "foot or toe swelling", "swollen big toe", "swelling in big toe",
-        "swollen foot", "toe swelling", "swollen toe"
+        "swollen foot", "toe swelling", "swollen toe", "swollen joint in toe", "big toe is swollen"
     ],
     "foot or toe pain": [
         "foot or toe pain", "pain in big toe", "big toe pain",
         "toe pain", "foot pain", "sudden severe pain in big toe",
-        "painful big toe", "pain in toe"
+        "painful big toe", "pain in toe", "severe pain in right big toe", "severe pain in big toe"
     ],
     # Peripheral neuropathy — tingling must map to paresthesia, NOT loss of sensation
-    # loss of sensation = negative/hypoesthetic; paresthesia = positive/tingling/pins-and-needles
     "paresthesia": [
         "paresthesia", "tingling", "tingling in feet", "tingling in hands",
         "tingling in fingers", "tingling in toes", "pins and needles",
         "pins and needles in feet", "numbness and tingling", "prickling sensation",
         "burning tingling sensation", "tingling sensation in limbs"
     ],
+    "skin rash": [
+        "skin rash", "rash", "itchy red spots", "red spots", "blisters all over", "fluid-filled blisters",
+        "little blisters", "itchy rash", "skin eruption", "spots on skin", "red bumps"
+    ],
+    "itching of skin": [
+        "itching of skin", "itchy skin", "itchiness", "pruritus", "severe itching", "scratching skin"
+    ],
+    "fatigue": [
+        "fatigue", "tiredness", "exhaustion", "feeling tired", "super tired", "lack of energy", "lethargy"
+    ],
+    "chills": [
+        "chills", "feeling cold", "shivering", "feeling chilly", "always feeling cold"
+    ],
+    "weight gain": [
+        "weight gain", "gained weight", "gaining weight", "unexplained weight gain", "weight increase"
+    ],
 }
 
+FEATURE_SYNONYMS: Dict[str, List[str]] = {}
 try:
-    with open(SYNONYMS_FILE, "r") as f:
-        FEATURE_SYNONYMS = json.load(f)
-        # Merge curated synonyms, extending lists where necessary
-        for k, v in CURATED_SYNONYMS.items():
-            if k in FEATURE_SYNONYMS:
-                FEATURE_SYNONYMS[k].extend(v)
-            else:
-                FEATURE_SYNONYMS[k] = v
+    load_path = SYNONYMS_FILE if SYNONYMS_FILE.exists() else FALLBACK_SYNONYMS_FILE
+    if load_path.exists():
+        with open(load_path, "r", encoding="utf-8") as f:
+            FEATURE_SYNONYMS = json.load(f)
+        LOGGER.info("Loaded base synonyms from %s (%d entries)", load_path, len(FEATURE_SYNONYMS))
+    for k, v in CURATED_SYNONYMS.items():
+        clean_k = k.lower().replace("_", " ")
+        if clean_k in FEATURE_SYNONYMS:
+            FEATURE_SYNONYMS[clean_k] = list(dict.fromkeys(FEATURE_SYNONYMS[clean_k] + v))
+        else:
+            FEATURE_SYNONYMS[clean_k] = v
 except Exception as e:
-    LOGGER.warning(f"Failed to load synonyms from {SYNONYMS_FILE}: {e}")
+    LOGGER.warning(f"Failed to load synonyms: {e}")
     FEATURE_SYNONYMS = CURATED_SYNONYMS
 
 
@@ -323,14 +348,32 @@ def extract_symptoms_with_llm(source_text: str, feature_columns: List[str]) -> L
             },
         )
 
-        parsed = json.loads(response["message"]["content"])
-        extracted_list = parsed.get("symptoms", [])
+        content_str = response["message"]["content"].strip()
+        if "```" in content_str:
+            content_str = re.sub(r"^```(?:json)?\s*", "", content_str)
+            content_str = re.sub(r"\s*```$", "", content_str)
+
+        try:
+            parsed = json.loads(content_str)
+        except json.JSONDecodeError:
+            # Fallback: regex search for JSON object or array
+            match = re.search(r"\{.*\}", content_str, re.DOTALL)
+            if match:
+                parsed = json.loads(match.group(0))
+            else:
+                parsed = {}
+
+        if isinstance(parsed, dict):
+            extracted_list = parsed.get("symptoms", [])
+        elif isinstance(parsed, list):
+            extracted_list = parsed
+        else:
+            extracted_list = []
 
         return map_extracted_to_features(extracted_list, feature_columns)
 
     except Exception as e:
         LOGGER.exception("Extraction error: %s", e)
-        print(f"Extraction error: {e}")
         return []
 
 
@@ -514,7 +557,10 @@ async def lifespan(_: FastAPI):
     LOGGER.info(f"Active extraction prompt template: {SYMPTOM_EXTRACTION_PROMPT_TEMPLATE}")
     LOGGER.info("Loading local embeddings, Chroma index, and Ollama client")
 
-    state.embeddings = HuggingFaceEmbeddings(model_name=DEFAULT_EMBEDDING_MODEL)
+    state.embeddings = HuggingFaceEmbeddings(
+        model_name=DEFAULT_EMBEDDING_MODEL,
+        model_kwargs={"local_files_only": True},
+    )
     state.vector_store = Chroma(
         collection_name=DEFAULT_COLLECTION_NAME,
         persist_directory=str(PERSIST_DIR),
@@ -613,11 +659,11 @@ def diagnose(req: DiagnoseRequest) -> DiagnoseResponse:
     x = [1 if fname.lower() in selected else 0 for fname in feature_names]
 
     try:
-        import numpy as np
+        import pandas as pd
 
-        arr = np.array(x).reshape(1, -1)
+        input_df = pd.DataFrame([x], columns=feature_names)
         if hasattr(state.classifier, "predict_proba"):
-            proba = state.classifier.predict_proba(arr)[0]
+            proba = state.classifier.predict_proba(input_df)[0]
             classes = list(state.classifier.classes_)
             sorted_predictions = sorted(zip(classes, proba), key=lambda item: item[1], reverse=True)
 
