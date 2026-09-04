@@ -69,6 +69,7 @@ export default function Page() {
   const [extractingFromText, setExtractingFromText] = useState(false);
   const [extractingFromDocs, setExtractingFromDocs] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeDocument, setActiveDocument] = useState<string | null>(null);
 
   const canSubmit = useMemo(() => query.trim().length > 0 && !loading, [query, loading]);
   const symptomSuggestions = useMemo(() => {
@@ -237,7 +238,7 @@ export default function Page() {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: disease }),
+        body: JSON.stringify({ query: disease, collection: "medical_documents" }),
       });
       if (!response.ok) throw new Error(await response.text());
       const data = (await response.json()) as QueryResponse;
@@ -282,6 +283,7 @@ export default function Page() {
       }
 
       const data = (await response.json()) as UploadResponse;
+      setActiveDocument(data.stored_file_name);
       showNotification(
         "success",
         `${data.original_file_name} indexed successfully with ${data.total_chunks_indexed} chunk${data.total_chunks_indexed === 1 ? "" : "s"}.`
@@ -320,12 +322,17 @@ export default function Page() {
     setSources([]);
 
     try {
+      const payload: any = { query: trimmedQuery, collection: "user_documents" };
+      if (activeDocument) {
+        payload.file_name = activeDocument;
+      }
+      
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ query: trimmedQuery }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {

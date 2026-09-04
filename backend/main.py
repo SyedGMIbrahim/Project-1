@@ -36,7 +36,7 @@ RAW_DIR = BASE_DIR / "data" / "raw"
 PERSIST_DIR = BASE_DIR / "chroma_db"
 DEFAULT_COLLECTION_NAME = "medical_documents"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1")
+DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
 DEFAULT_OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 TOP_K = 3
 MENTOR_DATASET_DIR = BASE_DIR / "data" / "mentor_dataset"
@@ -139,6 +139,8 @@ except Exception as e:
 
 class QueryRequest(BaseModel):
     query: str = Field(..., min_length=1, description="User question about the uploaded healthcare documents")
+    collection: str = Field("user_documents", description="Which collection to query ('user_documents' or 'medical_documents')")
+    file_name: Optional[str] = Field(None, description="Optional filename filter to restrict the query")
 
 
 class SourceDocument(BaseModel):
@@ -185,7 +187,8 @@ class ExtractRequest(BaseModel):
 
 
 class AppState:
-    vector_store: Optional[Chroma] = None
+    reference_vector_store: Optional[Chroma] = None
+    user_vector_store: Optional[Chroma] = None
     embeddings: Optional[HuggingFaceEmbeddings] = None
     ollama_client: Optional[ollama.Client] = None
     text_splitter: Optional[Any] = None
@@ -418,7 +421,7 @@ def format_datetime(timestamp: Optional[float]) -> Optional[str]:
 
 
 def get_indexed_document_records(limit: int = 100, offset: int = 0) -> List[DocumentRecord]:
-    if state.vector_store is None:
+    if state.user_vector_store is None:
         raise HTTPException(status_code=503, detail="Backend resources are not ready")
 
     chroma_sources: Dict[str, int] = {}
@@ -434,7 +437,7 @@ def get_indexed_document_records(limit: int = 100, offset: int = 0) -> List[Docu
 
     try:
         # Limit the number of metadata rows retrieved to avoid SQLite 'too many SQL variables' errors
-        collection_payload = state.vector_store._collection.get(include=["metadatas"], limit=limit, offset=offset)  # type: ignore[attr-defined]
+        collection_payload = state.user_vector_store._collection.get(include=["metadatas"], limit=limit, offset=offset)  # type: ignore[attr-defined]
     except Exception as exc:
         LOGGER.exception("Failed to query Chroma metadata")
         raise HTTPException(status_code=500, detail="Failed to inspect indexed documents") from exc
@@ -524,7 +527,7 @@ def build_documents_from_upload(file_path: Path, file_type: str) -> List[Documen
 
 
 def persist_uploaded_file(upload_file: UploadFile, file_name: str) -> Tuple[Path, str, int, str]:
-    if state.vector_store is None:
+    if state.user_vector_store is None:
         raise HTTPException(status_code=503, detail="Backend resources are not ready")
 
     ensure_upload_directory()
@@ -544,9 +547,9 @@ def persist_uploaded_file(upload_file: UploadFile, file_name: str) -> Tuple[Path
     if not chunked_documents:
         raise HTTPException(status_code=400, detail="Uploaded document did not contain any indexable text")
 
-    state.vector_store.add_documents(chunked_documents)
-    if hasattr(state.vector_store, "persist"):
-        state.vector_store.persist()
+    state.user_vector_store.add_documents(chunked_documents)
+    if hasattr(state.user_vector_store, "persist"):
+        state.user_vector_store.persist()
 
     return target_path, safe_name, len(chunked_documents), suffix.lstrip(".")
 
@@ -561,8 +564,13 @@ async def lifespan(_: FastAPI):
         model_name=DEFAULT_EMBEDDING_MODEL,
         model_kwargs={"local_files_only": True},
     )
-    state.vector_store = Chroma(
-        collection_name=DEFAULT_COLLECTION_NAME,
+    state.reference_vector_store = Chroma(
+        collection_name="medical_documents",
+        persist_directory=str(PERSIST_DIR),
+        embedding_function=state.embeddings,
+    )
+    state.user_vector_store = Chroma(
+        collection_name="user_documents",
         persist_directory=str(PERSIST_DIR),
         embedding_function=state.embeddings,
     )
@@ -605,7 +613,8 @@ async def lifespan(_: FastAPI):
 
     yield
 
-    state.vector_store = None
+    state.reference_vector_store = None
+    state.user_vector_store = None
     state.embeddings = None
     state.ollama_client = None
     state.text_splitter = None
@@ -711,12 +720,12 @@ async def extract_symptoms(request: dict):
 def extract_symptoms_from_docs() -> Dict[str, List[str]]:
     if state.classifier_features is None:
         raise HTTPException(status_code=404, detail="No symptom feature list available")
-    if state.vector_store is None:
+    if state.user_vector_store is None:
         raise HTTPException(status_code=503, detail="Vector store is not ready")
 
     query_text = "patient symptoms, chief complaint, physical signs, clinical presentation"
     try:
-        retrieved_documents = state.vector_store.similarity_search(query_text, k=5)
+        retrieved_documents = state.user_vector_store.similarity_search(query_text, k=5)
     except Exception as exc:
         LOGGER.exception("Vector search failed for extract-from-docs")
         raise HTTPException(status_code=500, detail="Failed to retrieve document context") from exc
@@ -755,7 +764,7 @@ async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
 
 @app.post("/api/query", response_model=QueryResponse)
 def query_documents(payload: QueryRequest) -> QueryResponse:
-    if state.vector_store is None or state.ollama_client is None:
+    if state.user_vector_store is None or state.reference_vector_store is None or state.ollama_client is None:
         raise HTTPException(status_code=503, detail="Backend resources are not ready")
 
     query_text = payload.query.strip()
@@ -763,7 +772,12 @@ def query_documents(payload: QueryRequest) -> QueryResponse:
         raise HTTPException(status_code=400, detail="Query cannot be empty")
 
     try:
-        retrieved_documents = state.vector_store.similarity_search(query_text, k=TOP_K)
+        target_store = state.reference_vector_store if payload.collection == "medical_documents" else state.user_vector_store
+        
+        if payload.collection == "user_documents" and payload.file_name:
+            retrieved_documents = target_store.similarity_search(query_text, k=TOP_K, filter={"file_name": payload.file_name})
+        else:
+            retrieved_documents = target_store.similarity_search(query_text, k=TOP_K)
     except Exception as exc:
         LOGGER.exception("Vector search failed")
         raise HTTPException(status_code=500, detail="Failed to retrieve supporting context") from exc
