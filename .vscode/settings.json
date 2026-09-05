@@ -7,5 +7,6 @@
   "python.autoComplete.extraPaths": [
     "${workspaceFolder}/backend/.venv/lib/python3.9/site-packages",
     "${workspaceFolder}/backend"
-  ]
+  ],
+  "python-envs.defaultEnvManager": "ms-python.python:system"
 }
