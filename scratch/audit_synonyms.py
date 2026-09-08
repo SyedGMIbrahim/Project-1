@@ -8,11 +8,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_DIR = os.path.join(BASE_DIR, "../backend")
 MODELS_DIR = os.path.join(BACKEND_DIR, "models")
-SYNONYMS_FILE = os.path.join(BASE_DIR, "generated_synonyms.json")
+SYNONYMS_FILE = os.path.join(BACKEND_DIR, "approved_synonyms_v1.json")
 
 def main():
-    payload = joblib.load(os.path.join(MODELS_DIR, "symptom_classifier.joblib"))
-    features = list(payload["features"])
+    import pandas as pd
+    dataset_path = os.path.join(BACKEND_DIR, "data", "train", "Diseases_and_Symptoms_dataset.csv")
+    df = pd.read_csv(dataset_path, nrows=0)
+    features = [c for c in df.columns if c not in ("Disease", "ID", "Unnamed: 0", "index")]
     feature_lower = [f.lower().replace("_", " ") for f in features]
     
     with open(SYNONYMS_FILE, "r") as f:

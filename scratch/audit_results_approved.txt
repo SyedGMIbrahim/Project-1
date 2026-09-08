@@ -1,0 +1,6 @@
+Warning: Assigned feature 'version' not in schema.
+Warning: Assigned feature 'sha256' not in schema.
+Warning: Assigned feature 'description' not in schema.
+Warning: Assigned feature 'audit_summary' not in schema.
+Warning: Assigned feature 'synonyms' not in schema.
+--- Synonym Audit Results (Total flagged: 0) ---

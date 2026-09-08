@@ -35,7 +35,7 @@ RAW_DIR = BASE_DIR / "data" / "raw"
 PERSIST_DIR = BASE_DIR / "chroma_db"
 DEFAULT_COLLECTION_NAME = "medical_documents"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:latest")
+DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3:latest")
 DEFAULT_OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 from evidence_engine import (
     DiseaseHallmarkRegistry,
@@ -435,23 +435,46 @@ def map_extracted_to_features_3state(
         sims = cosine_similarity(phrase_emb, state.feature_embeddings)[0]
         top_indices = sims.argsort()[-5:][::-1]
 
-        # Anatomical conflict guards and Taste gap guard
-        EYE_TERMS = {"eye", "ocular", "eyelash", "eyelid", "conjunctiv", "optic", "pupil", "iris", "gritty", "watery", "lacrimation"}
-        NASAL_TERMS = {"nasal", "nose", "sinus", "smell"}
-        TASTE_TERMS = {"taste", "ageusia", "dysgeusia", "flavor"}
+        # Comprehensive Domain-based Anatomical Conflict Guard
+        DOMAINS = {
+            "eye": {"eye", "vision", "ocular", "conjunctiva", "pupil", "iris", "lacrimation", "eyelash", "eyelid", "blind"},
+            "nasal_smell": {"nose", "nasal", "smell", "sinus", "coryza", "olfactory", "sneez"},
+            "abdominal": {"abdominal", "abdomen", "stomach", "belly", "gastric", "navel"},
+            "genital_pelvic": {"vaginal", "vagina", "vulva", "genital", "penile", "scrotum", "testes", "groin", "pelvic", "pelvis", "menstrual", "period"},
+            "foot_toe": {"foot", "feet", "toe", "heel"},
+            "mouth_taste": {"mouth", "taste", "tooth", "teeth", "gum", "oral", "tongue", "lip"},
+            "ear": {"ear", "hearing", "otic", "deaf"},
+            "chest": {"chest", "breast", "cardiac", "heart", "rib"},
+            "throat_neck": {"throat", "neck", "swallow", "tonsil"},
+            "head": {"head", "skull", "brain", "scalp"},
+            "neuro": {"sensation", "numbness", "tingling", "paresthesia", "paralysis", "seizure", "tremor"}
+        }
 
-        GENITAL_FEATURES = {"vaginal", "penile", "genital", "vulvar", "scrotum", "testes"}
-        EYE_FEATURES = {"eye", "eyelid", "conjunctiva", "vision"}
-        MOUTH_PAIN_FEATURES = {"mouth pain", "oral pain", "pain in gums", "toothache"}
-
-        phrase_has_eye = any(t in symptom_clean for t in EYE_TERMS)
-        phrase_has_nasal = any(t in symptom_clean for t in NASAL_TERMS)
-        phrase_has_taste = any(t in symptom_clean for t in TASTE_TERMS)
+        phrase_domains = set()
+        for domain, terms in DOMAINS.items():
+            if any(t in symptom_clean for t in terms):
+                phrase_domains.add(domain)
 
         def is_conflict(phrase, candidate_lower):
-            if phrase_has_eye and any(g in candidate_lower for g in GENITAL_FEATURES): return True
-            if phrase_has_nasal and any(g in candidate_lower for g in EYE_FEATURES.union(GENITAL_FEATURES)): return True
-            if phrase_has_taste and any(g in candidate_lower for g in MOUTH_PAIN_FEATURES): return True
+            candidate_domains = set()
+            for domain, terms in DOMAINS.items():
+                if any(t in candidate_lower for t in terms):
+                    candidate_domains.add(domain)
+
+            # If the candidate has no domains, it's generic (e.g., "skin rash", "nausea") -> No conflict
+            if not candidate_domains:
+                return False
+                
+            # If the candidate HAS specific domains, but the phrase has NO domains -> Conflict
+            # (e.g., phrase: "pain that is unbearable" -> candidate: "lower abdominal pain")
+            if not phrase_domains:
+                return True
+                
+            # If the candidate has domains, and the phrase has domains, they MUST intersect -> otherwise Conflict
+            # (e.g., phrase: "loss of sense of smell" [nasal] -> candidate: "loss of sensation" [neuro])
+            if not phrase_domains.intersection(candidate_domains):
+                return True
+                
             return False
 
         valid_candidates = []
@@ -583,10 +606,23 @@ def extract_symptoms_3state_with_llm(source_text: str, feature_columns: List[str
         extracted_list = parsed.get("symptoms", [])
 
         supported, uncertain, unsupported, details = map_extracted_to_features_3state(extracted_list, feature_columns)
+        
+        # Stage 2: Symptom Sparsity Score
+        EXPECTED_SYMPTOMS = 6.0
+        sparsity_score = max(0.0, min(1.0, 1.0 - (len(supported) / EXPECTED_SYMPTOMS)))
+        if sparsity_score <= 0.2:
+            sparsity_label = "Well-described"
+        elif sparsity_score <= 0.5:
+            sparsity_label = "Some symptoms may be missing"
+        else:
+            sparsity_label = "Very limited information provided"
+            
         return {
             "symptoms": supported,
             "uncertain": uncertain,
             "unsupported": unsupported,
+            "sparsity": round(sparsity_score, 2),
+            "sparsity_label": sparsity_label,
             "details": details,
         }
 

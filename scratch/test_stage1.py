@@ -39,11 +39,8 @@ def run_stage1_tests():
             supported = ext_data.get("symptoms", [])
             uncertain = ext_data.get("uncertain", [])
             unsupported = ext_data.get("unsupported", [])
-            sparsity = ext_data.get("sparsity", 0.0)
-            sparsity_label = ext_data.get("sparsity_label", "Unknown")
             
             print(f"  SUPPORTED ({len(supported)}): {supported}")
-            print(f"  SPARSITY: {sparsity:.2f} ({sparsity_label})")
             if uncertain:
                 print(f"  UNCERTAIN ({len(uncertain)}): {uncertain}")
             else:
@@ -51,50 +48,37 @@ def run_stage1_tests():
             print(f"  UNSUPPORTED ({len(unsupported)}): {unsupported}")
             
             if not supported:
-                results.append((name, supported, uncertain, unsupported, sparsity, "Unknown", 0))
+                results.append((name, supported, uncertain, unsupported, "Unknown", 0))
                 continue
                 
             # 2. Predict using supported symptoms only
             pred_res = requests.post(URL_PREDICT, json={"symptoms": supported})
             if pred_res.status_code != 200:
-                results.append((name, supported, uncertain, unsupported, sparsity, "ERROR", 0))
+                results.append((name, supported, uncertain, unsupported, "ERROR", 0))
                 continue
                 
             pred_data = pred_res.json()
             prediction = pred_data.get("predicted", "Unknown")
             probability = pred_data.get("probability", 0)
-            decision = pred_data.get("decision", "Unknown")
-            evidence_coverage = pred_data.get("evidence_coverage", 0.0)
-            abstention_reason = pred_data.get("abstention_reason", "")
             
             print(f"  PREDICTION: {prediction} ({probability*100:.1f}%)")
-            print(f"  DECISION: {decision}")
-            print(f"  EVIDENCE COVERAGE: {evidence_coverage*100:.1f}%")
-            if abstention_reason:
-                print(f"  REASON: {abstention_reason}")
             
-            results.append((name, supported, uncertain, unsupported, sparsity, prediction, probability, decision, evidence_coverage))
+            results.append((name, supported, uncertain, unsupported, prediction, probability))
             
         except Exception as e:
             print(f"Exception on {name}: {e}")
-            results.append((name, [], [], [], 0.0, "EXCEPTION", 0, "ERROR", 0.0))
+            results.append((name, [], [], [], "EXCEPTION", 0))
             
         time.sleep(0.5)
 
-    print("\n\n### Full Pipeline (Stages 1-4) Results Summary\n")
-    print("| Case | Supported | Sparsity | Sparsity Label | Prediction | Confidence | Coverage | Decision |")
-    print("|---|---|---|---|---|---|---|---|")
-    for name, supp, unc, unsupp, sparsity, pred, prob, decision, coverage in results:
+    print("\n\n### Stage 1: 13-Case Regression Results Summary\n")
+    print("| Case | Supported | Uncertain | Unsupported | Prediction | Confidence |")
+    print("|---|---|---|---|---|---|")
+    for name, supp, unc, unsupp, pred, prob in results:
         supp_str = str(len(supp))
-        
-        if sparsity <= 0.2:
-            lbl = "Well-described"
-        elif sparsity <= 0.5:
-            lbl = "Some missing"
-        else:
-            lbl = "Limited info"
-            
-        print(f"| **{name}** | {supp_str} | {sparsity:.2f} | {lbl} | {pred} | {prob*100:.1f}% | {coverage*100:.1f}% | {decision} |")
+        unc_str = str(len(unc))
+        unsupp_str = str(len(unsupp))
+        print(f"| **{name}** | {supp_str} | {unc_str} | {unsupp_str} | {pred} | {prob*100:.1f}% |")
 
 if __name__ == "__main__":
     run_stage1_tests()

@@ -1,11 +1,12 @@
 {
-  "version": "1.0.0",
-  "sha256": "800cc191456134fe2b25f9d25f7d3c0d9f1d03bf7048f9d496f512245daed0ac",
-  "description": "Clinically verified and audited synonym vocabulary for 230-symptom schema",
+  "version": "1.1.0",
+  "last_updated": "2026-09-08T23:11:52.826538",
+  "sha256": "d2c4f7cb641a6fdb6c117af562c8bf1fc438770be47455e4657d5f7608e37582",
+  "description": "Clinically verified and audited synonym vocabulary for 230-symptom schema. Addressed 83 flagged semantic drifts.",
   "audit_summary": {
-    "total_evaluated": 468,
-    "approved_count": 467,
-    "rejected_count": 1
+    "total_evaluated": 774,
+    "approved_count": 770,
+    "rejected_count": 4
   },
   "synonyms": {
     "anxiety and nervousness": [
@@ -16,23 +17,23 @@
       "depression"
     ],
     "shortness of breath": [
-      "shortness of breath",
-      "i'm short of air"
+      "i'm short of air",
+      "shortness of breath"
     ],
     "depressive or psychotic symptoms": [
       "depressive or psychotic symptoms"
     ],
     "sharp chest pain": [
-      "sharp chest pain",
-      "i've got a sharp pain in my chest"
+      "i've got a sharp pain in my chest",
+      "sharp chest pain"
     ],
     "dizziness": [
       "dizziness",
       "i'm feeling dizzy"
     ],
     "insomnia": [
-      "insomnia",
-      "i'm having bad insomnia"
+      "i'm having bad insomnia",
+      "insomnia"
     ],
     "abnormal involuntary movements": [
       "abnormal involuntary movements",
@@ -40,61 +41,68 @@
     ],
     "chest tightness": [
       "chest tightness",
-      "i've got a tightness in my chest",
-      "i've got a band around my chest"
+      "i've got a band around my chest",
+      "i've got a tightness in my chest"
     ],
     "palpitations": [
       "palpitations"
     ],
     "irregular heartbeat": [
+      "i've got an irregular heartbeat",
       "irregular heartbeat",
-      "my heart is beating irregularly",
-      "i've got an irregular heartbeat"
+      "my heart is beating irregularly"
     ],
     "breathing fast": [
       "breathing fast",
+      "i'm breathing rapidly",
       "i'm breathing really quickly",
-      "i'm hyperventilating",
-      "i'm breathing rapidly"
+      "i'm hyperventilating"
     ],
     "hoarse voice": [
       "hoarse voice",
+      "i've got a croaky voice",
       "i've got a hoarse voice",
-      "i've lost my voice",
-      "i've got a croaky voice"
+      "i've lost my voice"
     ],
     "sore throat": [
-      "sore throat",
-      "i've got a sore throat",
       "i've got a scratchy throat",
+      "i've got a sore throat",
       "i've got a throat that hurts",
+      "pharyngitis",
+      "raw throat",
       "scratchy throat",
-      "throat hurts"
+      "sore throat",
+      "throat hurts",
+      "throat pain"
     ],
     "difficulty speaking": [
       "difficulty speaking",
-      "i'm having trouble talking",
       "i'm having trouble getting words out",
+      "i'm having trouble talking",
       "i'm struggling to speak"
     ],
     "cough": [
       "cough",
+      "coughing",
+      "dry cough",
       "i've got a cough",
-      "coughing"
+      "persistent cough",
+      "productive cough"
     ],
     "nasal congestion": [
-      "nasal congestion",
-      "i've got a stuffy nose",
-      "i've got a runny nose",
+      "blocked nose",
+      "congestion",
       "i've got a congested nose",
-      "stuffy nose",
-      "congestion"
+      "i've got a runny nose",
+      "i've got a stuffy nose",
+      "nasal congestion",
+      "stuffy nose"
     ],
     "throat swelling": [
-      "throat swelling",
-      "my throat is swollen",
       "i've got a swollen throat",
-      "i've got a throat that's puffed up"
+      "i've got a throat that's puffed up",
+      "my throat is swollen",
+      "throat swelling"
     ],
     "diminished hearing": [
       "diminished hearing",
@@ -106,97 +114,98 @@
       "i'm struggling to eat"
     ],
     "skin swelling": [
-      "skin swelling",
-      "i've got a swollen skin"
+      "i've got a swollen skin",
+      "skin swelling"
     ],
     "retention of urine": [
-      "retention of urine",
       "i'm having trouble emptying my bladder",
-      "i'm retaining urine"
+      "i'm retaining urine",
+      "retention of urine"
     ],
     "leg pain": [
-      "leg pain",
-      "i've got a pain in my leg",
       "i've got a cramp in my leg",
-      "i've got a numbness in my leg"
+      "i've got a numbness in my leg",
+      "i've got a pain in my leg",
+      "leg pain"
     ],
     "hip pain": [
       "hip pain",
-      "i've got a pain in my hip",
-      "i've got a hip that hurts"
+      "i've got a hip that hurts",
+      "i've got a pain in my hip"
     ],
     "suprapubic pain": [
-      "suprapubic pain",
-      "i've got a suprapubic pain"
+      "i've got a suprapubic pain",
+      "suprapubic pain"
     ],
     "blood in stool": [
       "blood in stool",
-      "i've got blood in my stool",
-      "i've got a bloody stool"
+      "i've got a bloody stool",
+      "i've got blood in my stool"
     ],
     "lack of growth": [
-      "lack of growth",
-      "i'm not developing"
+      "i'm not developing",
+      "lack of growth"
     ],
     "symptoms of the scrotum and testes": [
       "symptoms of the scrotum and testes"
     ],
     "swelling of scrotum": [
-      "swelling of scrotum",
-      "my scrotum is swollen",
+      "i've got a scrotal edema",
       "i've got a swollen scrotum",
-      "i've got a scrotal edema"
+      "my scrotum is swollen",
+      "swelling of scrotum"
     ],
     "pain in testicles": [
-      "pain in testicles",
       "i've got a pain in my testicles",
       "i've got a testicular pain",
-      "i've got a testicular torsion"
+      "i've got a testicular torsion",
+      "pain in testicles"
     ],
     "pus draining from ear": [
-      "pus draining from ear",
+      "i've got a pus-filled ear",
       "i've got pus draining from my ear",
-      "i've got a pus-filled ear"
+      "pus draining from ear"
     ],
     "jaundice": [
-      "jaundice",
-      "i've got a jaundiced skin"
+      "i've got a jaundiced skin",
+      "jaundice"
     ],
     "white discharge from eye": [
-      "white discharge from eye",
+      "crusting around eye",
+      "crusting on eyelashes",
+      "crusty eye discharge",
+      "crusty eyelash discharge",
+      "crusty eyelashes",
+      "discharge from eye",
+      "eye discharge",
+      "eye mucus",
       "i've got a white discharge from my eye",
       "i've got a white film on my eye",
-      "eye discharge",
-      "crusty eye discharge",
-      "thick yellowish eye discharge",
-      "thick yellowish discharge from eye",
+      "pus from eye",
       "thick yellowish discharge",
+      "thick yellowish discharge from eye",
+      "thick yellowish eye discharge",
+      "white discharge from eye",
       "yellow eye discharge",
-      "yellowish discharge from eye",
-      "discharge from eye",
-      "eye mucus",
-      "crusty eyelashes",
-      "crusty eyelash discharge",
-      "crusting on eyelashes",
-      "crusting around eye"
+      "yellowish discharge from eye"
     ],
     "irritable infant": [
       "irritable infant",
+      "my baby is cranky",
       "my baby is fussy",
-      "my baby is irritable",
-      "my baby is cranky"
+      "my baby is irritable"
     ],
     "abusing alcohol": [
       "abusing alcohol",
+      "i'm an alcoholic",
       "i'm drinking too much",
-      "i've got an alcohol problem",
-      "i'm an alcoholic"
+      "i've got an alcohol problem"
     ],
     "fainting": [
       "fainting",
+      "i'm about to pass out",
       "i'm feeling lightheaded and about to pass out",
-      "i'm having a fainting spell",
-      "i'm about to pass out"
+      "i'm having a fainting spell"
     ],
     "hostile behavior": [
       "hostile behavior",
@@ -204,165 +213,184 @@
     ],
     "drug abuse": [
       "drug abuse",
+      "i'm a drug addict",
       "i'm taking too many drugs",
-      "i've got a drug problem",
-      "i'm a drug addict"
+      "i've got a drug problem"
     ],
     "sharp abdominal pain": [
-      "sharp abdominal pain",
+      "i've got a pinch in my abdomen",
       "i've got a sharp pain in my abdomen",
-      "i've got a pinch in my abdomen"
+      "sharp abdominal pain"
     ],
     "feeling ill": [
       "feeling ill",
+      "feeling unwell",
+      "general feeling of being unwell",
+      "i'm feeling miserable",
       "i'm feeling really sick",
       "i'm feeling unwell",
-      "i'm feeling miserable",
-      "malaise",
-      "general feeling of being unwell"
+      "malaise"
     ],
     "vomiting": [
-      "vomiting",
-      "throwing up"
+      "throwing up",
+      "vomiting"
     ],
     "headache": [
+      "head pain",
       "headache",
-      "my head hurts",
       "i have a headache",
+      "migraine",
+      "my head hurts",
       "my head is pounding",
-      "throbbing pain",
-      "pulsing pain",
       "pounding head",
       "throbbing pulsing pain on one side of the head"
     ],
     "nausea": [
+      "feel sick to stomach",
+      "feeling queasy",
       "nausea",
       "nauseous",
-      "feel sick to stomach"
+      "sick to my stomach"
     ],
     "diarrhea": [
       "diarrhea",
       "my poop is running"
     ],
     "vaginal itching": [
-      "vaginal itching",
+      "i have a yeast infection",
       "my vagina is itchy",
-      "i have a yeast infection"
+      "vaginal itching"
     ],
     "painful urination": [
+      "burning pain when i pee",
+      "burning sensation when peeing",
+      "burning urination",
+      "dysuria",
+      "hurts to pee",
+      "my pee is burning",
+      "pain when urinating",
       "painful urination",
-      "peeing hurts",
-      "my pee is burning"
+      "peeing hurts"
     ],
     "involuntary urination": [
+      "cannot hold urine",
       "involuntary urination",
+      "leaking urine",
+      "loss of bladder control",
       "urinary incontinence"
     ],
     "pain during intercourse": [
-      "pain during intercourse",
-      "sex hurts",
       "i have pain during sex",
-      "it hurts when i have sex"
+      "it hurts when i have sex",
+      "pain during intercourse",
+      "sex hurts"
     ],
     "frequent urination": [
       "frequent urination",
+      "i have to go all the time",
       "i'm going too often",
       "i'm peeing too much",
-      "i have to go all the time",
+      "need to pee often",
+      "peeing all the time",
+      "polyuria",
       "urinary frequency",
-      "urinary urgency"
+      "urinary urgency",
+      "urinating frequently"
     ],
     "lower abdominal pain": [
+      "cramping in lower abdomen",
       "lower abdominal pain",
+      "lower belly pain",
+      "lower stomach hurts",
       "my lower abs are sore"
     ],
     "vaginal discharge": [
-      "vaginal discharge",
-      "i have a discharge"
+      "i have a discharge",
+      "vaginal discharge"
     ],
     "blood in urine": [
       "blood in urine",
-      "i see blood in my pee",
-      "i have blood in my urine"
+      "i have blood in my urine",
+      "i see blood in my pee"
     ],
     "hot flashes": [
       "hot flashes",
       "i'm having hot flashes"
     ],
     "intermenstrual bleeding": [
-      "intermenstrual bleeding",
       "i'm bleeding between periods",
-      "i'm having abnormal bleeding"
+      "i'm having abnormal bleeding",
+      "intermenstrual bleeding"
     ],
     "hand or finger pain": [
       "hand or finger pain",
-      "my hand hurts",
       "i have a finger that aches",
+      "my hand hurts",
       "my hand or fingers are sore"
     ],
     "wrist pain": [
-      "wrist pain",
-      "my wrist hurts",
       "i have wrist pain",
-      "my wrist is sore"
+      "my wrist hurts",
+      "my wrist is sore",
+      "wrist pain"
     ],
     "hand or finger swelling": [
       "hand or finger swelling",
-      "my hand or finger is swollen",
       "i have swelling in my hand or finger",
-      "my hand or finger is puffy"
+      "my hand or finger is puffy",
+      "my hand or finger is swollen"
     ],
     "arm pain": [
       "arm pain",
-      "my arm hurts",
       "i have arm pain",
+      "my arm hurts",
       "my arm is sore"
     ],
     "wrist swelling": [
-      "wrist swelling",
-      "my wrist is swollen",
       "i have wrist swelling",
-      "my wrist is puffy"
+      "my wrist is puffy",
+      "my wrist is swollen",
+      "wrist swelling"
     ],
     "arm stiffness or tightness": [
       "arm stiffness or tightness",
-      "my arm is stiff",
       "i have arm stiffness",
-      "my arm feels tight"
+      "my arm feels tight",
+      "my arm is stiff"
     ],
     "arm swelling": [
       "arm swelling",
-      "my arm is swollen",
       "i have arm swelling",
-      "my arm is puffy"
+      "my arm is puffy",
+      "my arm is swollen"
     ],
     "hand or finger stiffness or tightness": [
       "hand or finger stiffness or tightness",
-      "my hand or finger is stiff",
       "i have hand or finger stiffness",
-      "my hand or finger feels tight"
+      "my hand or finger feels tight",
+      "my hand or finger is stiff"
     ],
     "lip swelling": [
-      "lip swelling",
-      "my lip is swollen",
       "i have lip swelling",
-      "my lip is puffy"
+      "lip swelling",
+      "my lip is puffy",
+      "my lip is swollen"
     ],
     "toothache": [
-      "toothache",
       "i have a toothache",
       "my tooth hurts",
-      "my tooth is sore"
+      "my tooth is sore",
+      "toothache"
     ],
     "abnormal appearing skin": [
       "abnormal appearing skin",
-      "my skin looks weird",
       "my skin is abnormal",
-      "my skin is unusual"
+      "my skin is unusual",
+      "my skin looks weird"
     ],
     "skin lesion": [
-      "skin lesion",
-      "i have a skin lump"
+      "i have a skin lump",
+      "skin lesion"
     ],
     "acne or pimples": [
       "acne or pimples",
@@ -372,18 +400,19 @@
     ],
     "facial pain": [
       "facial pain",
-      "my face hurts",
+      "facial pressure",
       "i have facial pain",
+      "my face hurts",
       "my face is sore"
     ],
     "mouth ulcer": [
-      "mouth ulcer",
+      "i have a mouth ulcer",
       "i have an ulcer on my tongue",
-      "i have a mouth ulcer"
+      "mouth ulcer"
     ],
     "skin growth": [
-      "skin growth",
-      "i have a skin growth"
+      "i have a skin growth",
+      "skin growth"
     ],
     "diminished vision": [
       "diminished vision",
@@ -391,95 +420,99 @@
     ],
     "double vision": [
       "double vision",
-      "i see double",
       "i have double vision",
+      "i see double",
       "i see two of everything"
     ],
     "symptoms of eye": [
-      "symptoms of eye",
-      "i have eye symptoms"
+      "i have eye symptoms",
+      "symptoms of eye"
     ],
     "pain in eye": [
-      "pain in eye",
-      "my eye hurts",
       "i have eye pain",
-      "my eye is sore"
+      "my eye hurts",
+      "my eye is sore",
+      "pain in eye"
     ],
     "abnormal movement of eyelid": [
       "abnormal movement of eyelid",
-      "my eyelid is twitching",
       "my eyelid is moving strangely",
-      "my eyelid is spasming"
+      "my eyelid is spasming",
+      "my eyelid is twitching"
     ],
     "foreign body sensation in eye": [
-      "foreign body sensation in eye",
-      "i have a foreign body sensation",
-      "gritty eye",
-      "gritty right eye",
-      "grittiness in eye",
-      "grittiness in right eye",
-      "sand in eye",
-      "feeling of sand in eye",
-      "gritty sensation in eye",
       "eye feels gritty",
       "eye feels like sand",
-      "foreign body feeling in eye"
+      "feeling of sand in eye",
+      "foreign body feeling in eye",
+      "foreign body sensation in eye",
+      "grittiness in eye",
+      "grittiness in left eye",
+      "grittiness in right eye",
+      "gritty eye",
+      "gritty left eye",
+      "gritty right eye",
+      "gritty sensation",
+      "gritty sensation in eye",
+      "i have a foreign body sensation",
+      "sand in eye"
     ],
     "irregular appearing scalp": [
       "irregular appearing scalp",
-      "my scalp looks weird",
+      "my scalp is abnormal",
       "my scalp is unusual",
-      "my scalp is abnormal"
+      "my scalp looks weird"
     ],
     "back pain": [
       "back pain",
-      "my back hurts",
       "i have back pain",
+      "lower back pain",
+      "my back hurts",
       "my back is sore"
     ],
     "neck pain": [
-      "neck pain",
-      "my neck hurts",
       "i have neck pain",
-      "my neck is sore"
+      "my neck hurts",
+      "my neck is sore",
+      "neck pain"
     ],
     "low back pain": [
-      "low back pain",
-      "my lower back hurts",
       "i have low back pain",
-      "my lower back is sore",
-      "lower back pain"
+      "low back pain",
+      "lower back pain",
+      "my lower back hurts",
+      "my lower back is sore"
     ],
     "pain of the anus": [
-      "pain of the anus",
-      "anus pain"
+      "anus pain",
+      "pain of the anus"
     ],
     "pain during pregnancy": [
-      "pain during pregnancy",
-      "pregnancy pain",
+      "labor pain",
       "maternal discomfort",
-      "labor pain"
+      "pain during pregnancy",
+      "pregnancy pain"
     ],
     "pelvic pain": [
-      "pelvic pain",
-      "pelvic discomfort"
+      "pelvic discomfort",
+      "pelvic pain"
     ],
     "impotence": [
-      "impotence",
       "erectile dysfunction",
+      "impotence",
       "sexual dysfunction"
     ],
     "vomiting blood": [
-      "vomiting blood",
-      "blood vomiting"
+      "blood vomiting",
+      "vomiting blood"
     ],
     "regurgitation": [
       "regurgitation"
     ],
     "burning abdominal pain": [
-      "burning abdominal pain",
       "abdominal burning",
-      "belly burning"
+      "belly burning",
+      "burning abdominal pain"
     ],
     "restlessness": [
       "restlessness"
@@ -488,114 +521,121 @@
       "wheezing"
     ],
     "peripheral edema": [
-      "peripheral edema",
-      "edema feet"
+      "edema feet",
+      "peripheral edema"
     ],
     "neck mass": [
       "neck mass"
     ],
     "ear pain": [
+      "ear discomfort",
       "ear pain",
       "earache",
-      "otalgia",
-      "ear discomfort"
+      "otalgia"
     ],
     "jaw swelling": [
-      "jaw swelling",
-      "jaw lump"
+      "jaw lump",
+      "jaw swelling"
     ],
     "mouth dryness": [
-      "mouth dryness",
       "dry mouth",
-      "mouth dry"
+      "mouth dry",
+      "mouth dryness"
     ],
     "neck swelling": [
       "neck swelling"
     ],
     "knee pain": [
-      "knee pain",
       "knee ache",
-      "patellofemoral pain",
-      "kneecap pain"
+      "knee pain",
+      "kneecap pain",
+      "patellofemoral pain"
     ],
     "foot or toe pain": [
-      "foot or toe pain",
-      "foot ache",
-      "toe pain",
-      "podalgia",
-      "pain in big toe",
       "big toe pain",
+      "foot ache",
+      "foot or toe pain",
       "foot pain",
-      "sudden severe pain in big toe",
+      "pain in big toe",
+      "pain in toe",
       "painful big toe",
-      "pain in toe"
+      "podalgia",
+      "severe pain in big toe",
+      "severe pain in right big toe",
+      "sudden severe pain in big toe",
+      "toe pain"
     ],
     "ankle pain": [
-      "ankle pain",
       "ankle ache",
+      "ankle pain",
       "ankle sprain"
     ],
     "bones are painful": [
       "bones are painful"
     ],
     "elbow pain": [
-      "elbow pain",
       "elbow ache",
+      "elbow pain",
       "elbow strain"
     ],
     "knee swelling": [
-      "knee swelling",
-      "knee lump",
       "joint swelling",
+      "knee lump",
+      "knee swelling",
       "kneecap swelling"
     ],
     "skin moles": [
       "skin moles"
     ],
     "weight gain": [
+      "bmi increase",
+      "gained weight",
+      "gaining weight",
+      "unexplained weight gain",
       "weight gain",
-      "weight increase",
-      "bmi increase"
+      "weight increase"
     ],
     "problems with movement": [
-      "problems with movement",
+      "mobility issues",
       "movement difficulty",
-      "mobility issues"
+      "problems with movement"
     ],
     "knee stiffness or tightness": [
-      "knee stiffness or tightness",
+      "joint tightness",
       "knee stiffness",
-      "kneecap tightness",
-      "joint tightness"
+      "knee stiffness or tightness",
+      "kneecap tightness"
     ],
     "leg swelling": [
-      "leg swelling",
       "leg lump",
+      "leg swelling",
       "limb swelling"
     ],
     "foot or toe swelling": [
-      "foot or toe swelling",
+      "big toe is swollen",
       "foot lump",
-      "toe swelling",
-      "swollen big toe",
+      "foot or toe swelling",
       "swelling in big toe",
+      "swollen big toe",
       "swollen foot",
-      "swollen toe"
+      "swollen joint in toe",
+      "swollen toe",
+      "toe swelling"
     ],
     "heartburn": [
-      "heartburn",
-      "acid reflux"
+      "acid reflux",
+      "heartburn"
     ],
     "infant feeding problem": [
-      "infant feeding problem",
+      "breastfeeding issues",
       "infant feeding difficulties",
-      "breastfeeding issues"
+      "infant feeding problem"
     ],
     "vaginal pain": [
-      "vaginal pain",
+      "genital pain",
       "vaginal ache",
-      "vulvodynia",
-      "genital pain"
+      "vaginal pain",
+      "vulvodynia"
     ],
     "vaginal redness": [
       "vaginal redness"
@@ -612,80 +652,86 @@
       "rapid heart rate"
     ],
     "ringing in ear": [
+      "ear ringing",
       "ringing in ear",
-      "tinnitus",
-      "ear ringing"
+      "tinnitus"
     ],
     "plugged feeling in ear": [
-      "plugged feeling in ear",
-      "ear canal plugged"
+      "ear canal plugged",
+      "plugged feeling in ear"
     ],
     "itchy ear(s)": [
-      "itchy ear(s)",
-      "ear itching"
+      "ear itching",
+      "itchy ear(s)"
     ],
     "frontal headache": [
-      "frontal headache",
-      "front of head hurts"
+      "forehead headache",
+      "front of head hurts",
+      "frontal headache"
     ],
     "fluid in ear": [
       "fluid in ear",
-      "otitis media",
-      "middle ear fluid"
+      "middle ear fluid",
+      "otitis media"
     ],
     "spots or clouds in vision": [
-      "spots or clouds in vision",
-      "spots in vision"
+      "spots in vision",
+      "spots or clouds in vision"
     ],
     "eye redness": [
-      "eye redness",
-      "red eyes",
-      "red eye",
-      "red right eye",
-      "red left eye",
       "bloodshot eye",
+      "eye redness",
       "eyes red",
+      "pink eye",
+      "red eye",
+      "red eyes",
+      "red left eye",
+      "red right eye",
       "redness of eye"
     ],
     "lacrimation": [
-      "lacrimation",
-      "watery eye",
-      "watering eye",
-      "watering right eye",
-      "watery right eye",
+      "excessive tearing",
       "eye watering",
-      "tearing of eye"
+      "eyes watering constantly",
+      "lacrimation",
+      "tearing of eye",
+      "watering eye",
+      "watering left eye",
+      "watering right eye",
+      "watery eye",
+      "watery left eye",
+      "watery right eye"
     ],
     "itchiness of eye": [
-      "itchiness of eye",
-      "itchy eyes",
-      "irritated eyes",
-      "scratchy eyes",
-      "itchy eye",
-      "itchy right eye",
-      "itchy left eye",
       "eye itching",
-      "itching in eye"
+      "irritated eyes",
+      "itchiness of eye",
+      "itching in eye",
+      "itchy eye",
+      "itchy eyes",
+      "itchy left eye",
+      "itchy right eye",
+      "scratchy eyes"
     ],
     "blindness": [
       "blindness",
       "loss of sight"
     ],
     "eye burns or stings": [
-      "eye burns or stings",
       "burning eyes",
+      "eye burns or stings",
       "stinging eyes"
     ],
     "decreased appetite": [
       "decreased appetite",
       "loss of hunger",
-      "reduced appetite",
-      "no appetite"
+      "no appetite",
+      "reduced appetite"
     ],
     "excessive anger": [
+      "anger",
       "excessive anger",
-      "rage",
-      "anger"
+      "rage"
     ],
     "loss of sensation": [
       "loss of sensation",
@@ -699,64 +745,69 @@
     ],
     "disturbance of memory": [
       "disturbance of memory",
-      "memory loss",
       "forgetfulness",
+      "memory loss",
       "memory problems"
     ],
     "paresthesia": [
+      "burning tingling sensation",
+      "numbness and tingling",
       "paresthesia",
-      "tingling",
-      "tingling in feet",
-      "tingling in hands",
-      "tingling in fingers",
-      "tingling in toes",
       "pins and needles",
       "pins and needles in feet",
-      "numbness and tingling",
       "prickling sensation",
-      "burning tingling sensation",
+      "tingling",
+      "tingling in feet",
+      "tingling in fingers",
+      "tingling in hands",
+      "tingling in toes",
       "tingling sensation in limbs"
     ],
     "side pain": [
-      "side pain",
-      "side ache"
+      "side ache",
+      "side pain"
     ],
     "fever": [
+      "elevated temperature",
+      "febrile",
       "fever",
       "feverish",
+      "high temperature",
       "low-grade fever",
-      "high temperature"
+      "pyrexia"
     ],
     "shoulder pain": [
-      "shoulder pain",
       "shoulder ache",
-      "shoulder strain",
-      "shoulder sprain"
+      "shoulder pain",
+      "shoulder sprain",
+      "shoulder strain"
     ],
     "shoulder stiffness or tightness": [
-      "shoulder stiffness or tightness",
+      "shoulder rigidity",
       "shoulder stiffness",
-      "shoulder tightness",
-      "shoulder rigidity"
+      "shoulder stiffness or tightness",
+      "shoulder tightness"
     ],
     "ache all over": [
       "ache all over",
       "body aches",
-      "body pain"
+      "body pain",
+      "generalized body aches",
+      "muscle aches all over"
     ],
     "lower body pain": [
       "lower body pain"
     ],
     "problems during pregnancy": [
-      "problems during pregnancy",
-      "pregnancy complications",
       "maternal complications",
-      "pregnancy issues"
+      "pregnancy complications",
+      "pregnancy issues",
+      "problems during pregnancy"
     ],
     "spotting or bleeding during pregnancy": [
-      "spotting or bleeding during pregnancy",
       "spotting",
-      "spotting or bleeding"
+      "spotting or bleeding",
+      "spotting or bleeding during pregnancy"
     ],
     "cramps and spasms": [
       "cramps and spasms",
@@ -764,14 +815,14 @@
       "muscle spasms"
     ],
     "upper abdominal pain": [
-      "upper abdominal pain",
-      "upper abdominal ache",
+      "abdominal discomfort",
       "stomach pain",
-      "abdominal discomfort"
+      "upper abdominal ache",
+      "upper abdominal pain"
     ],
     "stomach bloating": [
-      "stomach bloating",
       "bloating",
+      "stomach bloating",
       "stomach swelling"
     ],
     "changes in stool appearance": [
@@ -786,74 +837,82 @@
       "unusual urine odor"
     ],
     "kidney mass": [
+      "kidney growth",
       "kidney mass",
-      "kidney tumor",
-      "kidney growth"
+      "kidney tumor"
     ],
     "symptoms of prostate": [
       "symptoms of prostate"
     ],
     "difficulty breathing": [
-      "difficulty breathing",
       "breathing difficulties",
       "breathing problems",
+      "difficulty breathing",
       "respiratory distress"
     ],
     "rib pain": [
-      "rib pain",
-      "rib ache"
+      "rib ache",
+      "rib pain"
     ],
     "joint pain": [
-      "joint pain",
+      "arthritis",
       "joint ache",
-      "arthritis"
+      "joint pain"
     ],
     "hand or finger lump or mass": [
-      "hand or finger lump or mass",
       "finger lump",
       "finger mass",
-      "hand mass"
+      "hand mass",
+      "hand or finger lump or mass"
     ],
     "chills": [
+      "always feeling cold",
+      "chilliness",
       "chills",
-      "chilliness"
+      "feeling chilly",
+      "feeling cold",
+      "shivering"
     ],
     "groin pain": [
-      "groin pain",
-      "groin ache"
+      "groin ache",
+      "groin pain"
     ],
     "fatigue": [
-      "fatigue",
       "exhaustion",
+      "fatigue",
+      "feeling tired",
+      "lack of energy",
+      "lethargy",
+      "super tired",
       "tiredness"
     ],
     "regurgitation.1": [
       "regurgitation.1"
     ],
     "symptoms of the kidneys": [
-      "symptoms of the kidneys",
       "kidney symptoms",
+      "nephrological symptoms",
       "renal symptoms",
-      "nephrological symptoms"
+      "symptoms of the kidneys"
     ],
     "melena": [
       "melena"
     ],
     "coughing up sputum": [
-      "coughing up sputum",
+      "coughing up mucus",
       "coughing up phlegm",
-      "coughing up mucus"
+      "coughing up sputum"
     ],
     "seizures": [
-      "seizures",
+      "convulsions",
       "seizure activity",
       "seizure episodes",
-      "convulsions"
+      "seizures"
     ],
     "delusions or hallucinations": [
+      "delusions",
       "delusions or hallucinations",
-      "hallucinations",
-      "delusions"
+      "hallucinations"
     ],
     "excessive urination at night": [
       "excessive urination at night",
@@ -876,11 +935,13 @@
       "straining to have a bowel movement"
     ],
     "temper problems": [
-      "temper problems",
-      "short temper"
+      "short temper",
+      "temper problems"
     ],
     "coryza": [
       "coryza",
+      "rhinorrhea",
+      "running nose",
       "runny nose"
     ],
     "hemoptysis": [
@@ -890,12 +951,12 @@
       "allergic reaction"
     ],
     "congestion in chest": [
-      "congestion in chest",
-      "chest congestion"
+      "chest congestion",
+      "congestion in chest"
     ],
     "sleepiness": [
-      "sleepiness",
-      "drowsiness"
+      "drowsiness",
+      "sleepiness"
     ],
     "apnea": [
       "apnea"
@@ -910,22 +971,22 @@
       "pulling at ears"
     ],
     "gum pain": [
-      "gum pain",
-      "gum soreness",
+      "gum discomfort",
       "gum inflammation",
-      "gum discomfort"
+      "gum pain",
+      "gum soreness"
     ],
     "redness in ear": [
-      "redness in ear",
-      "ear redness"
+      "ear redness",
+      "redness in ear"
     ],
     "fluid retention": [
       "fluid retention",
       "water retention"
     ],
     "flu-like syndrome": [
-      "flu-like syndrome",
       "flu symptoms",
+      "flu-like syndrome",
       "influenza-like symptoms",
       "viral syndrome"
     ],
@@ -935,39 +996,40 @@
     ],
     "painful sinuses": [
       "painful sinuses",
+      "sinus headache",
       "sinus pain"
     ],
     "fears and phobias": [
       "fears and phobias",
-      "terror",
+      "irrational fears",
       "phobias",
-      "irrational fears"
+      "terror"
     ],
     "recent pregnancy": [
-      "recent pregnancy",
-      "being pregnant"
+      "being pregnant",
+      "recent pregnancy"
     ],
     "uterine contractions": [
-      "uterine contractions",
-      "contractions"
+      "contractions",
+      "uterine contractions"
     ],
     "burning chest pain": [
       "burning chest pain",
       "chest burning"
     ],
     "back cramps or spasms": [
+      "back cramps",
       "back cramps or spasms",
       "back spasms",
-      "back cramps",
-      "sudden cramping pain in back",
-      "sudden severe cramping back pain",
       "cramping pain in lower back and side",
-      "severe back cramps"
+      "severe back cramps",
+      "sudden cramping pain in back",
+      "sudden severe cramping back pain"
     ],
     "back mass or lump": [
-      "back mass or lump",
       "back lump",
       "back mass",
+      "back mass or lump",
       "back tumor"
     ],
     "nosebleed": [
@@ -981,19 +1043,19 @@
       "heavy menstrual flow"
     ],
     "unpredictable menstruation": [
-      "unpredictable menstruation",
-      "menstrual irregularities"
+      "menstrual irregularities",
+      "unpredictable menstruation"
     ],
     "painful menstruation": [
-      "painful menstruation",
+      "dysmenorrhea",
       "menstrual cramps",
-      "period pain",
-      "dysmenorrhea"
+      "painful menstruation",
+      "period pain"
     ],
     "infertility": [
-      "infertility",
       "having trouble getting pregnant",
-      "impaired fertility"
+      "impaired fertility",
+      "infertility"
     ],
     "frequent menstruation": [
       "frequent menstruation",
@@ -1001,69 +1063,81 @@
       "menstrual frequency"
     ],
     "sweating": [
-      "sweating",
       "excessive sweating",
-      "hyperhidrosis"
+      "hyperhidrosis",
+      "sweating"
     ],
     "mass on eyelid": [
-      "mass on eyelid",
-      "eyelid mass"
+      "eyelid mass",
+      "mass on eyelid"
     ],
     "swollen eye": [
-      "swollen eye",
-      "eye puffiness"
+      "eye puffiness",
+      "swollen eye"
     ],
     "eyelid swelling": [
-      "eyelid swelling",
-      "eyelid edema"
+      "eyelid edema",
+      "eyelid swelling"
     ],
     "eyelid lesion or rash": [
+      "eyelid lesion",
       "eyelid lesion or rash",
-      "eyelid rash",
-      "eyelid lesion"
+      "eyelid rash"
     ],
     "symptoms of bladder": [
-      "symptoms of bladder",
-      "urinary symptoms",
       "bladder symptoms",
-      "lower urinary tract symptoms"
+      "lower urinary tract symptoms",
+      "symptoms of bladder",
+      "urinary symptoms"
     ],
     "irregular appearing nails": [
       "irregular appearing nails",
+      "nail abnormalities",
       "nail changes",
-      "nail irregularities",
-      "nail abnormalities"
+      "nail irregularities"
     ],
     "itching of skin": [
+      "itchiness",
       "itching of skin",
       "itchy skin",
+      "pruritus",
+      "scratching skin",
+      "severe itching",
       "skin itching"
     ],
     "hurts to breath": [
       "hurts to breath"
     ],
     "skin dryness, peeling, scaliness, or roughness": [
-      "skin dryness, peeling, scaliness, or roughness",
       "dry skin",
       "peeling skin",
-      "rough skin"
+      "rough skin",
+      "skin dryness, peeling, scaliness, or roughness"
     ],
     "skin irritation": [
       "skin irritation",
       "skin reaction"
     ],
     "itchy scalp": [
-      "itchy scalp",
       "dandruff",
+      "itchy scalp",
       "scalp irritation"
     ],
     "warts": [
       "warts"
     ],
     "skin rash": [
-      "skin rash",
+      "blisters all over",
+      "fluid-filled blisters",
+      "itchy rash",
+      "itchy red spots",
+      "little blisters",
       "rash",
-      "red bumps"
+      "red bumps",
+      "red spots",
+      "skin eruption",
+      "skin rash",
+      "spots on skin"
     ],
     "mass or swelling around the anus": [
       "mass or swelling around the anus",
@@ -1078,36 +1152,36 @@
       "swollen elbow"
     ],
     "bleeding from ear": [
+      "bleeding ear",
       "bleeding from ear",
-      "ear bleeding",
-      "bleeding ear"
+      "ear bleeding"
     ],
     "hand or finger weakness": [
       "hand or finger weakness",
-      "weak hands",
-      "hand weakness"
+      "hand weakness",
+      "weak hands"
     ],
     "low self-esteem": [
-      "low self-esteem",
       "low self esteem",
-      "self esteem issues",
-      "self confidence"
+      "low self-esteem",
+      "self confidence",
+      "self esteem issues"
     ],
     "itching of the anus": [
-      "itching of the anus",
-      "itchy anus",
+      "anal itching",
       "anus itching",
-      "anal itching"
+      "itching of the anus",
+      "itchy anus"
     ],
     "swollen or red tonsils": [
       "swollen or red tonsils",
-      "tonsil swelling",
+      "swollen tonsils",
       "tonsil redness",
-      "swollen tonsils"
+      "tonsil swelling"
     ],
     "hip stiffness or tightness": [
-      "hip stiffness or tightness",
       "hip stiffness",
+      "hip stiffness or tightness",
       "hip tightness"
     ],
     "mouth pain": [
@@ -1119,28 +1193,28 @@
       "weak arm"
     ],
     "obsessions and compulsions": [
+      "compulsive behavior",
       "obsessions and compulsions",
-      "obsessive behavior",
-      "compulsive behavior"
+      "obsessive behavior"
     ],
     "antisocial behavior": [
       "antisocial behavior"
     ],
     "sneezing": [
-      "sneezing",
-      "sneezes"
+      "sneezes",
+      "sneezing"
     ],
     "leg weakness": [
       "leg weakness",
       "weak legs"
     ],
     "hysterical behavior": [
-      "hysterical behavior",
-      "hysteria"
+      "hysteria",
+      "hysterical behavior"
     ],
     "arm lump or mass": [
-      "arm lump or mass",
       "arm lump",
+      "arm lump or mass",
       "arm mass"
     ],
     "bleeding gums": [
@@ -1151,15 +1225,15 @@
       "pain in gums"
     ],
     "diaper rash": [
-      "diaper rash",
-      "diaper irritation"
+      "diaper irritation",
+      "diaper rash"
     ],
     "hesitancy": [
       "hesitancy"
     ],
     "back stiffness or tightness": [
-      "back stiffness or tightness",
       "back stiffness",
+      "back stiffness or tightness",
       "back tightness"
     ],
     "low urine output": [

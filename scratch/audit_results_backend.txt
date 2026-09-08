@@ -1,0 +1,416 @@
+--- Synonym Audit Results (Total flagged: 83) ---
+Synonym: 'tearing of eye'
+  Assigned: [lacrimation] (Score: 0.2126)
+  Closer to: [pain in eye] (Score: 0.7685)
+  Delta: +0.5559
+
+Synonym: 'suprapubic pain'
+  Assigned: [lower abdominal pain] (Score: 0.4777)
+  Closer to: [suprapubic pain] (Score: 1.0000)
+  Delta: +0.5223
+
+Synonym: 'watery left eye'
+  Assigned: [lacrimation] (Score: 0.1685)
+  Closer to: [swollen eye] (Score: 0.6714)
+  Delta: +0.5029
+
+Synonym: 'watery right eye'
+  Assigned: [lacrimation] (Score: 0.1845)
+  Closer to: [swollen eye] (Score: 0.6752)
+  Delta: +0.4906
+
+Synonym: 'watering left eye'
+  Assigned: [lacrimation] (Score: 0.1140)
+  Closer to: [pain in eye] (Score: 0.5893)
+  Delta: +0.4753
+
+Synonym: 'watering right eye'
+  Assigned: [lacrimation] (Score: 0.1310)
+  Closer to: [pain in eye] (Score: 0.5987)
+  Delta: +0.4677
+
+Synonym: 'pelvic pain'
+  Assigned: [lower abdominal pain] (Score: 0.5493)
+  Closer to: [pelvic pain] (Score: 1.0000)
+  Delta: +0.4507
+
+Synonym: 'tingling sensation in limbs'
+  Assigned: [paresthesia] (Score: 0.1565)
+  Closer to: [loss of sensation] (Score: 0.5987)
+  Delta: +0.4422
+
+Synonym: 'watering eye'
+  Assigned: [lacrimation] (Score: 0.1871)
+  Closer to: [pain in eye] (Score: 0.6280)
+  Delta: +0.4409
+
+Synonym: 'watery eye'
+  Assigned: [lacrimation] (Score: 0.2542)
+  Closer to: [swollen eye] (Score: 0.6851)
+  Delta: +0.4309
+
+Synonym: 'numbness and tingling'
+  Assigned: [paresthesia] (Score: 0.2240)
+  Closer to: [loss of sensation] (Score: 0.6524)
+  Delta: +0.4283
+
+Synonym: 'tingling in toes'
+  Assigned: [paresthesia] (Score: 0.1675)
+  Closer to: [foot or toe pain] (Score: 0.5955)
+  Delta: +0.4280
+
+Synonym: 'burning tingling sensation'
+  Assigned: [paresthesia] (Score: 0.1980)
+  Closer to: [loss of sensation] (Score: 0.6144)
+  Delta: +0.4165
+
+Synonym: 'tingling in fingers'
+  Assigned: [paresthesia] (Score: 0.1889)
+  Closer to: [hand or finger pain] (Score: 0.5996)
+  Delta: +0.4107
+
+Synonym: 'tingling in hands'
+  Assigned: [paresthesia] (Score: 0.1654)
+  Closer to: [hand or finger swelling] (Score: 0.5691)
+  Delta: +0.4037
+
+Synonym: 'tingling in feet'
+  Assigned: [paresthesia] (Score: 0.1807)
+  Closer to: [foot or toe pain] (Score: 0.5681)
+  Delta: +0.3874
+
+Synonym: 'eyes watering constantly'
+  Assigned: [lacrimation] (Score: 0.1772)
+  Closer to: [pain in eye] (Score: 0.5586)
+  Delta: +0.3814
+
+Synonym: 'runny nose'
+  Assigned: [coryza] (Score: 0.2267)
+  Closer to: [nasal congestion] (Score: 0.6081)
+  Delta: +0.3814
+
+Synonym: 'tingling'
+  Assigned: [paresthesia] (Score: 0.1769)
+  Closer to: [loss of sensation] (Score: 0.5448)
+  Delta: +0.3679
+
+Synonym: 'running nose'
+  Assigned: [coryza] (Score: 0.2067)
+  Closer to: [nosebleed] (Score: 0.5609)
+  Delta: +0.3542
+
+Synonym: 'body pain'
+  Assigned: [ache all over] (Score: 0.4980)
+  Closer to: [lower body pain] (Score: 0.8092)
+  Delta: +0.3112
+
+Synonym: 'facial pressure'
+  Assigned: [frontal headache] (Score: 0.3325)
+  Closer to: [facial pain] (Score: 0.6423)
+  Delta: +0.3098
+
+Synonym: 'prickling sensation'
+  Assigned: [paresthesia] (Score: 0.2985)
+  Closer to: [loss of sensation] (Score: 0.6032)
+  Delta: +0.3048
+
+Synonym: 'excessive tearing'
+  Assigned: [lacrimation] (Score: 0.1847)
+  Closer to: [hurts to breath] (Score: 0.4778)
+  Delta: +0.2931
+
+Synonym: 'pins and needles in feet'
+  Assigned: [paresthesia] (Score: 0.2705)
+  Closer to: [foot or toe pain] (Score: 0.5621)
+  Delta: +0.2916
+
+Synonym: 'eye watering'
+  Assigned: [lacrimation] (Score: 0.2564)
+  Closer to: [pain in eye] (Score: 0.5359)
+  Delta: +0.2795
+
+Synonym: 'rhinorrhea'
+  Assigned: [coryza] (Score: 0.2707)
+  Closer to: [diarrhea] (Score: 0.5494)
+  Delta: +0.2788
+
+Synonym: 'fluid-filled blisters'
+  Assigned: [skin rash] (Score: 0.1951)
+  Closer to: [fluid retention] (Score: 0.4316)
+  Delta: +0.2366
+
+Synonym: 'sinus congestion'
+  Assigned: [nasal congestion] (Score: 0.7791)
+  Closer to: [sinus congestion] (Score: 1.0000)
+  Delta: +0.2209
+
+Synonym: 'cannot hold urine'
+  Assigned: [involuntary urination] (Score: 0.4690)
+  Closer to: [retention of urine] (Score: 0.6821)
+  Delta: +0.2131
+
+Synonym: 'sand in eye'
+  Assigned: [foreign body sensation in eye] (Score: 0.4035)
+  Closer to: [pain in eye] (Score: 0.6140)
+  Delta: +0.2105
+
+Synonym: 'crusting around eye'
+  Assigned: [white discharge from eye] (Score: 0.4945)
+  Closer to: [itchiness of eye] (Score: 0.7010)
+  Delta: +0.2066
+
+Synonym: 'gritty eye'
+  Assigned: [foreign body sensation in eye] (Score: 0.3768)
+  Closer to: [itchiness of eye] (Score: 0.5711)
+  Delta: +0.1943
+
+Synonym: 'grittiness in eye'
+  Assigned: [foreign body sensation in eye] (Score: 0.3983)
+  Closer to: [itchiness of eye] (Score: 0.5899)
+  Delta: +0.1916
+
+Synonym: 'red spots'
+  Assigned: [skin rash] (Score: 0.4419)
+  Closer to: [eye redness] (Score: 0.6270)
+  Delta: +0.1851
+
+Synonym: 'crusty eyelashes'
+  Assigned: [white discharge from eye] (Score: 0.3494)
+  Closer to: [eyelid swelling] (Score: 0.5331)
+  Delta: +0.1837
+
+Synonym: 'crusting on eyelashes'
+  Assigned: [white discharge from eye] (Score: 0.3536)
+  Closer to: [eyelid swelling] (Score: 0.5284)
+  Delta: +0.1748
+
+Synonym: 'gritty right eye'
+  Assigned: [foreign body sensation in eye] (Score: 0.3934)
+  Closer to: [itchiness of eye] (Score: 0.5660)
+  Delta: +0.1727
+
+Synonym: 'sinus headache'
+  Assigned: [frontal headache] (Score: 0.6339)
+  Closer to: [painful sinuses] (Score: 0.8056)
+  Delta: +0.1717
+
+Synonym: 'gritty left eye'
+  Assigned: [foreign body sensation in eye] (Score: 0.4120)
+  Closer to: [itchiness of eye] (Score: 0.5803)
+  Delta: +0.1683
+
+Synonym: 'grittiness in right eye'
+  Assigned: [foreign body sensation in eye] (Score: 0.3927)
+  Closer to: [itchiness of eye] (Score: 0.5558)
+  Delta: +0.1632
+
+Synonym: 'little blisters'
+  Assigned: [skin rash] (Score: 0.2873)
+  Closer to: [skin moles] (Score: 0.4360)
+  Delta: +0.1487
+
+Synonym: 'grittiness in left eye'
+  Assigned: [foreign body sensation in eye] (Score: 0.4238)
+  Closer to: [pain in eye] (Score: 0.5676)
+  Delta: +0.1438
+
+Synonym: 'eye feels like sand'
+  Assigned: [foreign body sensation in eye] (Score: 0.5470)
+  Closer to: [pain in eye] (Score: 0.6862)
+  Delta: +0.1391
+
+Synonym: 'pus from eye'
+  Assigned: [white discharge from eye] (Score: 0.4070)
+  Closer to: [pain in eye] (Score: 0.5408)
+  Delta: +0.1338
+
+Synonym: 'pins and needles'
+  Assigned: [paresthesia] (Score: 0.3202)
+  Closer to: [hand or finger pain] (Score: 0.4539)
+  Delta: +0.1337
+
+Synonym: 'sluggish'
+  Assigned: [feeling ill] (Score: 0.2402)
+  Closer to: [problems with movement] (Score: 0.3714)
+  Delta: +0.1312
+
+Synonym: 'feeling queasy'
+  Assigned: [nausea] (Score: 0.4423)
+  Closer to: [feeling ill] (Score: 0.5690)
+  Delta: +0.1267
+
+Synonym: 'leaking urine'
+  Assigned: [involuntary urination] (Score: 0.5352)
+  Closer to: [blood in urine] (Score: 0.6596)
+  Delta: +0.1244
+
+Synonym: 'feeling cold'
+  Assigned: [chills] (Score: 0.5429)
+  Closer to: [feeling ill] (Score: 0.6668)
+  Delta: +0.1239
+
+Synonym: 'eye feels gritty'
+  Assigned: [foreign body sensation in eye] (Score: 0.5371)
+  Closer to: [pain in eye] (Score: 0.6480)
+  Delta: +0.1109
+
+Synonym: 'pruritus'
+  Assigned: [itching of skin] (Score: 0.3528)
+  Closer to: [coughing up sputum] (Score: 0.4578)
+  Delta: +0.1050
+
+Synonym: 'pulsing pain'
+  Assigned: [headache] (Score: 0.4549)
+  Closer to: [cramps and spasms] (Score: 0.5566)
+  Delta: +0.1017
+
+Synonym: 'throbbing pain'
+  Assigned: [headache] (Score: 0.5162)
+  Closer to: [pain during intercourse] (Score: 0.6170)
+  Delta: +0.1007
+
+Synonym: 'gritty sensation'
+  Assigned: [foreign body sensation in eye] (Score: 0.4221)
+  Closer to: [loss of sensation] (Score: 0.5146)
+  Delta: +0.0925
+
+Synonym: 'febrile'
+  Assigned: [fever] (Score: 0.3689)
+  Closer to: [coryza] (Score: 0.4576)
+  Delta: +0.0888
+
+Synonym: 'malaise'
+  Assigned: [feeling ill] (Score: 0.4469)
+  Closer to: [vomiting] (Score: 0.5335)
+  Delta: +0.0866
+
+Synonym: 'itchiness'
+  Assigned: [itching of skin] (Score: 0.6935)
+  Closer to: [itchiness of eye] (Score: 0.7763)
+  Delta: +0.0827
+
+Synonym: 'persistent cough'
+  Assigned: [cough] (Score: 0.5477)
+  Closer to: [coughing up sputum] (Score: 0.6277)
+  Delta: +0.0800
+
+Synonym: 'loss of bladder control'
+  Assigned: [involuntary urination] (Score: 0.5544)
+  Closer to: [symptoms of bladder] (Score: 0.6294)
+  Delta: +0.0750
+
+Synonym: 'bloodshot eye'
+  Assigned: [eye redness] (Score: 0.6228)
+  Closer to: [bleeding from eye] (Score: 0.6916)
+  Delta: +0.0688
+
+Synonym: 'spots on skin'
+  Assigned: [skin rash] (Score: 0.6449)
+  Closer to: [abnormal appearing skin] (Score: 0.7117)
+  Delta: +0.0668
+
+Synonym: 'feeling of sand in eye'
+  Assigned: [foreign body sensation in eye] (Score: 0.5589)
+  Closer to: [pain in eye] (Score: 0.6224)
+  Delta: +0.0635
+
+Synonym: 'forehead headache'
+  Assigned: [frontal headache] (Score: 0.7583)
+  Closer to: [headache] (Score: 0.8176)
+  Delta: +0.0593
+
+Synonym: 'stuffy nose'
+  Assigned: [nasal congestion] (Score: 0.5362)
+  Closer to: [nosebleed] (Score: 0.5954)
+  Delta: +0.0591
+
+Synonym: 'lethargy'
+  Assigned: [fatigue] (Score: 0.2726)
+  Closer to: [hesitancy] (Score: 0.3256)
+  Delta: +0.0529
+
+Synonym: 'itchy red spots'
+  Assigned: [skin rash] (Score: 0.6423)
+  Closer to: [itching of skin] (Score: 0.6950)
+  Delta: +0.0527
+
+Synonym: 'polyuria'
+  Assigned: [frequent urination] (Score: 0.4826)
+  Closer to: [blood in urine] (Score: 0.5337)
+  Delta: +0.0510
+
+Synonym: 'generalized body aches'
+  Assigned: [ache all over] (Score: 0.5807)
+  Closer to: [lower body pain] (Score: 0.6291)
+  Delta: +0.0484
+
+Synonym: 'always feeling cold'
+  Assigned: [chills] (Score: 0.4727)
+  Closer to: [feeling ill] (Score: 0.5192)
+  Delta: +0.0464
+
+Synonym: 'eye mucus'
+  Assigned: [white discharge from eye] (Score: 0.6149)
+  Closer to: [pain in eye] (Score: 0.6596)
+  Delta: +0.0448
+
+Synonym: 'blisters all over'
+  Assigned: [skin rash] (Score: 0.3164)
+  Closer to: [skin moles] (Score: 0.3583)
+  Delta: +0.0419
+
+Synonym: 'pyrexia'
+  Assigned: [fever] (Score: 0.3562)
+  Closer to: [diseases] (Score: 0.3842)
+  Delta: +0.0280
+
+Synonym: 'skin eruption'
+  Assigned: [skin rash] (Score: 0.6850)
+  Closer to: [skin irritation] (Score: 0.7088)
+  Delta: +0.0238
+
+Synonym: 'scratching skin'
+  Assigned: [itching of skin] (Score: 0.6759)
+  Closer to: [skin irritation] (Score: 0.6995)
+  Delta: +0.0237
+
+Synonym: 'gritty sensation in eye'
+  Assigned: [foreign body sensation in eye] (Score: 0.6338)
+  Closer to: [itchiness of eye] (Score: 0.6570)
+  Delta: +0.0232
+
+Synonym: 'lack of energy'
+  Assigned: [fatigue] (Score: 0.5867)
+  Closer to: [lack of growth] (Score: 0.6097)
+  Delta: +0.0231
+
+Synonym: 'urinary urgency'
+  Assigned: [frequent urination] (Score: 0.6206)
+  Closer to: [involuntary urination] (Score: 0.6408)
+  Delta: +0.0202
+
+Synonym: 'dry cough'
+  Assigned: [cough] (Score: 0.5660)
+  Closer to: [coughing up sputum] (Score: 0.5846)
+  Delta: +0.0185
+
+Synonym: 'sick to my stomach'
+  Assigned: [nausea] (Score: 0.7168)
+  Closer to: [feeling ill] (Score: 0.7337)
+  Delta: +0.0169
+
+Synonym: 'high temperature'
+  Assigned: [fever] (Score: 0.4413)
+  Closer to: [temper problems] (Score: 0.4581)
+  Delta: +0.0168
+
+Synonym: 'elevated temperature'
+  Assigned: [fever] (Score: 0.3737)
+  Closer to: [temper problems] (Score: 0.3902)
+  Delta: +0.0165
+
+Synonym: 'throbbing pulsing pain on one side of the head'
+  Assigned: [headache] (Score: 0.5525)
+  Closer to: [neck pain] (Score: 0.5671)
+  Delta: +0.0146
+
