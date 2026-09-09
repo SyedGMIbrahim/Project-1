@@ -41,10 +41,12 @@ type DiagnoseResponseData = {
   evidence_coverage: number;
   abstention_reason?: string | null;
   clarification_question?: string | null;
+  clarification_target?: string | null;
   symptom_states?: {
     supported: string[];
     uncertain: string[];
     unsupported: string[];
+    denied?: string[];
   };
   evidence_details?: {
     candidate_disease: string;
@@ -58,6 +60,12 @@ type DiagnoseResponseData = {
       active_symptom_count: number;
       z_score: number;
       is_sparse: boolean;
+    };
+    epistemic_states?: {
+      supported: string[];
+      uncertain: string[];
+      unsupported: string[];
+      denied?: string[];
     };
   };
 };
@@ -91,6 +99,7 @@ export default function Page() {
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [uncertainSymptoms, setUncertainSymptoms] = useState<string[]>([]);
   const [unsupportedSymptoms, setUnsupportedSymptoms] = useState<string[]>([]);
+  const [deniedSymptoms, setDeniedSymptoms] = useState<string[]>([]);
   const [diagnosisLoading, setDiagnosisLoading] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnoseResponseData | null>(null);
   const DIAGNOSE_URL = "http://localhost:8000/api/diagnose";
@@ -183,6 +192,7 @@ export default function Page() {
     setSelectedSymptoms(selected);
     setUncertainSymptoms(Array.isArray(uncertain) ? uncertain : []);
     setUnsupportedSymptoms(Array.isArray(unsupported) ? unsupported : []);
+    setDeniedSymptoms([]); // Reset denied symptoms on fresh extraction
     const uncertMsg = uncertain.length ? `, ${uncertain.length} uncertain` : "";
     const unsuppMsg = unsupported.length ? `, ${unsupported.length} unmapped` : "";
     showNotification("success", `Extracted ${selected.length} supported symptom${selected.length === 1 ? "" : "s"}${uncertMsg}${unsuppMsg}`);
@@ -231,21 +241,30 @@ export default function Page() {
     }
   }
 
-  async function handleDiagnose(overrideSymptoms?: string[]) {
+  async function handleDiagnose(
+    overrideSymptoms?: string[],
+    overrideDenied?: string[],
+    overrideUncertain?: string[],
+    overrideUnsupported?: string[]
+  ) {
     const symptomsToUse = overrideSymptoms || selectedSymptoms;
+    const deniedToUse = overrideDenied !== undefined ? overrideDenied : deniedSymptoms;
+    const uncertainToUse = overrideUncertain !== undefined ? overrideUncertain : uncertainSymptoms;
+    const unsupportedToUse = overrideUnsupported !== undefined ? overrideUnsupported : unsupportedSymptoms;
+
     if (symptomsToUse.length === 0) {
       showNotification("error", "Please select one or more symptoms to run diagnosis.");
       return;
     }
 
     setDiagnosisLoading(true);
-    setDiagnosisResult(null);
 
     try {
       const payload = {
         symptoms: symptomsToUse,
-        uncertain_symptoms: uncertainSymptoms,
-        unsupported_symptoms: unsupportedSymptoms,
+        uncertain_symptoms: uncertainToUse,
+        unsupported_symptoms: unsupportedToUse,
+        denied_symptoms: deniedToUse,
       };
       const res = await fetch(DIAGNOSE_URL, {
         method: "POST",
@@ -273,22 +292,51 @@ export default function Page() {
   function handleClarificationResponse(answerYes: boolean) {
     if (!diagnosisResult || !diagnosisResult.clarification_question) return;
 
-    if (answerYes) {
-      const candidateSymptom =
-        diagnosisResult.evidence_details?.missing_hallmarks?.[0]?.symptom ||
-        uncertainSymptoms[0];
+    // Determine target symptom precisely from backend response
+    const targetSymptom =
+      diagnosisResult.clarification_target ||
+      diagnosisResult.evidence_details?.missing_hallmarks?.[0]?.symptom ||
+      uncertainSymptoms[0];
 
-      if (candidateSymptom) {
-        const updated = [...new Set([...selectedSymptoms, candidateSymptom])];
-        setSelectedSymptoms(updated);
-        setUncertainSymptoms((prev) => prev.filter((s) => s.toLowerCase() !== candidateSymptom.toLowerCase()));
-        showNotification("success", `Added '${candidateSymptom}'. Re-evaluating decision gate...`);
-        void handleDiagnose(updated);
-        return;
-      }
+    if (!targetSymptom) {
+      showNotification("error", "No target symptom identified for clarification.");
+      return;
     }
 
-    showNotification("info", "Clarification response recorded: symptom absent.");
+    if (answerYes) {
+      // User confirms symptom is present
+      const updatedSymptoms = [...new Set([...selectedSymptoms, targetSymptom])];
+      const updatedUncertain = uncertainSymptoms.filter(
+        (s) => s.toLowerCase() !== targetSymptom.toLowerCase()
+      );
+      const updatedDenied = deniedSymptoms.filter(
+        (s) => s.toLowerCase() !== targetSymptom.toLowerCase()
+      );
+
+      setSelectedSymptoms(updatedSymptoms);
+      setUncertainSymptoms(updatedUncertain);
+      setDeniedSymptoms(updatedDenied);
+      showNotification("success", `Added '${targetSymptom}'. Re-evaluating decision gate...`);
+      void handleDiagnose(updatedSymptoms, updatedDenied, updatedUncertain, unsupportedSymptoms);
+    } else {
+      // User clarifies symptom is ABSENT
+      const updatedDenied = [...new Set([...deniedSymptoms, targetSymptom])];
+      const updatedUncertain = uncertainSymptoms.filter(
+        (s) => s.toLowerCase() !== targetSymptom.toLowerCase()
+      );
+
+      setDeniedSymptoms(updatedDenied);
+      setUncertainSymptoms(updatedUncertain);
+      showNotification("info", `Recorded '${targetSymptom}' as absent. Moving to next clarification...`);
+      void handleDiagnose(selectedSymptoms, updatedDenied, updatedUncertain, unsupportedSymptoms);
+    }
+  }
+
+  function removeDeniedSymptom(symptom: string) {
+    const updatedDenied = deniedSymptoms.filter((s) => s.toLowerCase() !== symptom.toLowerCase());
+    setDeniedSymptoms(updatedDenied);
+    showNotification("info", `Unmarked '${symptom}' from absent list.`);
+    void handleDiagnose(selectedSymptoms, updatedDenied, uncertainSymptoms, unsupportedSymptoms);
   }
 
   function promoteUncertainSymptom(symptom: string) {
@@ -891,6 +939,41 @@ export default function Page() {
                   </div>
                 </div>
               ) : null}
+
+              {/* State 4: DENIED / ABSENT Symptoms (Explicitly confirmed absent by user) */}
+              {deniedSymptoms.length > 0 ? (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Confirmed Absent Findings ({deniedSymptoms.length})
+                    </span>
+                    <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
+                      Clarified Absent
+                    </span>
+                  </div>
+                  <p className="mb-2 text-xs text-slate-500">
+                    Excluded from diagnostic hallmark matching following user clarification.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {deniedSymptoms.map((sym) => (
+                      <span
+                        key={sym}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 line-through ring-1 ring-slate-300"
+                      >
+                        <span>{sym}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeDeniedSymptom(sym)}
+                          className="font-bold text-slate-400 hover:text-rose-600"
+                          title="Unmark absent"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             {/* ── Run Diagnosis Trigger & Evidence-Adaptive Result Panel ── */}
@@ -1084,6 +1167,22 @@ export default function Page() {
                             ))}
                           </div>
                         </div>
+
+                        {deniedSymptoms.length > 0 ? (
+                          <div>
+                            <span className="font-semibold text-rose-700">Confirmed Absent Hallmarks:</span>
+                            <div className="mt-1 flex flex-wrap gap-1.5">
+                              {deniedSymptoms.map((sym) => (
+                                <span
+                                  key={sym}
+                                  className="rounded-md bg-rose-50 px-2 py-0.5 text-rose-700 line-through ring-1 ring-rose-200"
+                                >
+                                  {sym}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
                       </div>
                     </details>
                   ) : null}

@@ -35,7 +35,7 @@ RAW_DIR = BASE_DIR / "data" / "raw"
 PERSIST_DIR = BASE_DIR / "chroma_db"
 DEFAULT_COLLECTION_NAME = "medical_documents"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3:latest")
+DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:latest")
 DEFAULT_OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 from evidence_engine import (
     DiseaseHallmarkRegistry,
@@ -189,6 +189,7 @@ class DiagnoseRequest(BaseModel):
     symptoms: List[str] = Field(..., description="List of symptom names (strings)")
     uncertain_symptoms: Optional[List[str]] = Field(default=None, description="Borderline or near-tie symptoms")
     unsupported_symptoms: Optional[List[str]] = Field(default=None, description="Unmapped or schema-unsupported symptoms")
+    denied_symptoms: Optional[List[str]] = Field(default=None, description="Symptoms explicitly confirmed as absent by user")
 
 
 class DiagnoseResponse(BaseModel):
@@ -202,7 +203,8 @@ class DiagnoseResponse(BaseModel):
     evidence_coverage: float = 0.0                       # Weighted hallmark overlap 0.0–1.0
     abstention_reason: Optional[str] = None              # Human-readable reason when ABSTAIN
     clarification_question: Optional[str] = None         # Targeted question when CLARIFY
-    symptom_states: Optional[Dict[str, Any]] = None      # {supported, uncertain, unsupported}
+    clarification_target: Optional[str] = None           # Target symptom queried for clarification
+    symptom_states: Optional[Dict[str, Any]] = None      # {supported, uncertain, unsupported, denied}
     evidence_details: Optional[Dict[str, Any]] = None    # {present_hallmarks, missing_hallmarks, ...}
 
 
@@ -961,6 +963,7 @@ def diagnose(req: DiagnoseRequest) -> DiagnoseResponse:
         uncertain_symptoms=req.uncertain_symptoms or [],
         unsupported_symptoms=req.unsupported_symptoms or [],
         hallmark_registry=state.hallmark_registry,
+        denied_symptoms=req.denied_symptoms or [],
     )
 
     return DiagnoseResponse(
@@ -973,10 +976,12 @@ def diagnose(req: DiagnoseRequest) -> DiagnoseResponse:
         evidence_coverage=gate_result["evidence_coverage"],
         abstention_reason=gate_result["abstention_reason"],
         clarification_question=gate_result["clarification_question"],
+        clarification_target=gate_result.get("clarification_target"),
         symptom_states={
             "supported": list(selected),
             "uncertain": req.uncertain_symptoms or [],
             "unsupported": req.unsupported_symptoms or [],
+            "denied": req.denied_symptoms or [],
         },
         evidence_details=gate_result["evidence_details"],
     )

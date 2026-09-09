@@ -119,6 +119,53 @@ class TestEvidenceAdaptiveSystem(unittest.TestCase):
         self.assertIn("question", q_info)
         self.assertGreater(q_info["discriminating_power"], 0.0)
 
+    def test_sequential_clarification_with_denied_symptoms(self):
+        """Verify that when a symptom is clarified as absent (denied), the engine advances to the NEXT hallmark."""
+        top_preds = [("chronic obstructive pulmonary disease (copd)", 0.70), ("asthma", 0.15)]
+        supported = ["wheezing"]
+        
+        # First question
+        q1 = select_highest_information_gain_question(
+            top_candidates=top_preds,
+            supported_symptoms=supported,
+            uncertain_symptoms=[],
+            hallmark_registry=self.registry,
+            denied_symptoms=[],
+        )
+        self.assertIsNotNone(q1)
+        first_target = q1["target_symptom"]
+
+        # When user answers "No, symptom is absent" -> first_target is denied
+        q2 = select_highest_information_gain_question(
+            top_candidates=top_preds,
+            supported_symptoms=supported,
+            uncertain_symptoms=[],
+            hallmark_registry=self.registry,
+            denied_symptoms=[first_target],
+        )
+        self.assertIsNotNone(q2)
+        self.assertNotEqual(q2["target_symptom"], first_target)
+
+    def test_clarification_exhaustion_abstain(self):
+        """Verify that when all candidate hallmark questions are denied absent, gate cleanly transitions to ABSTAIN."""
+        top_preds = [("chronic obstructive pulmonary disease (copd)", 0.70)]
+        supported = ["wheezing"]
+        copd_hallmarks = list(self.registry.get_hallmarks("chronic obstructive pulmonary disease (copd)").keys())
+        
+        # Deny all COPD hallmarks
+        gate = evaluate_decision_gate(
+            top_predictions=top_preds,
+            supported_symptoms=supported,
+            uncertain_symptoms=[],
+            unsupported_symptoms=[],
+            hallmark_registry=self.registry,
+            denied_symptoms=copd_hallmarks,
+        )
+
+        self.assertEqual(gate["decision"], "ABSTAIN")
+        self.assertIsNotNone(gate["abstention_reason"])
+        self.assertIn("exhausted", gate["abstention_reason"].lower())
+
 
 if __name__ == "__main__":
     unittest.main()

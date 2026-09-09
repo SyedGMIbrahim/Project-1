@@ -188,21 +188,26 @@ def select_highest_information_gain_question(
     supported_symptoms: List[str],
     uncertain_symptoms: List[str],
     hallmark_registry: DiseaseHallmarkRegistry,
+    denied_symptoms: Optional[List[str]] = None,
 ) -> Optional[Dict[str, Any]]:
     """
     Discriminative Information-Gain Clarification Engine:
     When the decision gate enters CLARIFY, selects the single most discriminative
     missing hallmark feature between competing hypotheses (d_1, d_2) to maximally
     reduce diagnostic uncertainty.
+
+    Excludes already supported and denied (explicitly confirmed absent) symptoms.
     """
     if not top_candidates:
         return None
 
     supported_set = set(s.strip().lower() for s in supported_symptoms)
+    denied_set = set(s.strip().lower() for s in (denied_symptoms or []))
 
-    # 1. First priority: Resolve any UNCERTAIN near-tie or borderline symptoms
-    if uncertain_symptoms:
-        first_uncertain = uncertain_symptoms[0]
+    # 1. First priority: Resolve any UNCERTAIN near-tie or borderline symptoms not yet denied
+    pending_uncertain = [u for u in uncertain_symptoms if u.strip().lower() not in denied_set]
+    if pending_uncertain:
+        first_uncertain = pending_uncertain[0]
         return {
             "target_symptom": first_uncertain,
             "question": f"Could you clarify if you are experiencing '{first_uncertain}'?",
@@ -217,9 +222,10 @@ def select_highest_information_gain_question(
     top_hallmarks = hallmark_registry.get_hallmarks(top_disease)
     runner_hallmarks = hallmark_registry.get_hallmarks(runner_up_disease) if runner_up_disease else {}
 
-    # Pool candidate discriminating features
+    # Pool candidate discriminating features, excluding supported and denied symptoms
     candidate_features: Set[str] = set(top_hallmarks.keys()).union(runner_hallmarks.keys())
     candidate_features -= supported_set
+    candidate_features -= denied_set
 
     if not candidate_features:
         return None
@@ -254,6 +260,7 @@ def evaluate_decision_gate(
     uncertain_symptoms: List[str],
     unsupported_symptoms: List[str],
     hallmark_registry: DiseaseHallmarkRegistry,
+    denied_symptoms: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Adaptive Multi-Criteria Decision Gate: T = f(S, A, C, N)
@@ -269,10 +276,12 @@ def evaluate_decision_gate(
     - decision: "DIAGNOSE" | "CLARIFY" | "ABSTAIN"
     - abstention_reason: Detailed clinical explanation if ABSTAIN
     - clarification_question: Targeted clarification query if CLARIFY
+    - clarification_target: Target symptom key being queried
     - evidence_details: Full clinical evidence breakdown
     """
     active_count = len(supported_symptoms)
     sparsity_info = calculate_sparsity_metrics(active_count)
+    denied_list = denied_symptoms or []
 
     if not top_predictions:
         return {
@@ -282,6 +291,7 @@ def evaluate_decision_gate(
             "evidence_coverage": 0.0,
             "abstention_reason": "No diagnostic hypotheses produced by classifier.",
             "clarification_question": None,
+            "clarification_target": None,
             "sparsity_info": sparsity_info,
             "evidence_details": None,
         }
@@ -300,6 +310,11 @@ def evaluate_decision_gate(
     decision = "DIAGNOSE"
     abstention_reason: Optional[str] = None
     clarification_question: Optional[str] = None
+    clarification_target: Optional[str] = None
+
+    # Filter missing hallmarks to prioritize non-denied ones in breakdown display
+    denied_set = set(s.strip().lower() for s in denied_list)
+    active_missing_hallmarks = [m for m in missing_hallmarks if m["symptom"].strip().lower() not in denied_set]
 
     # ── RULE 1: Severe Evidence Deficit or Complete Hallmarks Absence ──
     if len(present_hallmarks) < MIN_HALLMARKS_PRESENT_DIAGNOSE and coverage < MIN_EVIDENCE_COVERAGE_CLARIFY:
@@ -321,26 +336,30 @@ def evaluate_decision_gate(
     # ── RULE 3: Moderate Coverage or Sparse Domain Mismatch -> CLARIFY ──
     elif coverage < MIN_EVIDENCE_COVERAGE_DIAGNOSE or (sparsity_info["is_sparse"] and top_prob < adaptive_prob_floor):
         q_info = select_highest_information_gain_question(
-            top_predictions, supported_symptoms, uncertain_symptoms, hallmark_registry
+            top_predictions, supported_symptoms, uncertain_symptoms, hallmark_registry, denied_symptoms=denied_list
         )
         if q_info:
             decision = "CLARIFY"
             clarification_question = q_info["question"]
+            clarification_target = q_info.get("target_symptom")
         else:
             decision = "ABSTAIN"
+            denied_note = f" (denied absent: {', '.join(denied_list)})" if denied_list else ""
             abstention_reason = (
                 f"Sparsity Mismatch: Presentation is sparse ({active_count} symptoms, z={sparsity_info['z_score']}) "
-                f"with incomplete evidence coverage ({round(coverage*100, 1)}% < {round(MIN_EVIDENCE_COVERAGE_DIAGNOSE*100, 1)}%)."
+                f"with incomplete evidence coverage ({round(coverage*100, 1)}% < {round(MIN_EVIDENCE_COVERAGE_DIAGNOSE*100, 1)}%). "
+                f"Clarification options exhausted{denied_note}."
             )
 
     # ── RULE 4: Borderline Semantic Ambiguity Exists ──
     elif uncertain_symptoms:
         q_info = select_highest_information_gain_question(
-            top_predictions, supported_symptoms, uncertain_symptoms, hallmark_registry
+            top_predictions, supported_symptoms, uncertain_symptoms, hallmark_registry, denied_symptoms=denied_list
         )
         if q_info:
             decision = "CLARIFY"
             clarification_question = q_info["question"]
+            clarification_target = q_info.get("target_symptom")
 
     evidence_details = {
         "candidate_disease": top_disease,
@@ -348,12 +367,13 @@ def evaluate_decision_gate(
         "evidence_coverage": coverage,
         "adaptive_threshold": round(adaptive_prob_floor, 3),
         "present_hallmarks": present_hallmarks,
-        "missing_hallmarks": missing_hallmarks[:5],
+        "missing_hallmarks": active_missing_hallmarks[:5] if active_missing_hallmarks else missing_hallmarks[:5],
         "sparsity_metrics": sparsity_info,
         "epistemic_states": {
             "supported": supported_symptoms,
             "uncertain": uncertain_symptoms,
             "unsupported": unsupported_symptoms,
+            "denied": denied_list,
         },
     }
 
@@ -369,6 +389,7 @@ def evaluate_decision_gate(
         "evidence_coverage": coverage,
         "abstention_reason": abstention_reason,
         "clarification_question": clarification_question,
+        "clarification_target": clarification_target,
         "sparsity_info": sparsity_info,
         "evidence_details": evidence_details,
     }
