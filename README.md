@@ -26,39 +26,103 @@ The project has two parts:
 3. **Safety Guardrails:** Uses margin-based rejection (dropping near-ties) and anatomical context guards (preventing eye/nasal/mouth crossover hallucinations) to ensure high-fidelity mapping.
 4. **Diagnosis Classifier:** A Stacking Ensemble (Random Forests, Gradient Boosting, MLP) trained on 195,000 samples predicts the top diseases based on the activated symptom vector.
 
-### 3. Evidence-Adaptive Clinical Decision Support (Patent-Defensible Architecture)
-To overcome the prior-art trap of standard "LLM + embeddings + classifier + RAG" systems and eliminate overconfident predictions on sparse inputs, the pipeline integrates a closed-loop evidence sufficiency and decision-gating engine:
+### 3. Evidence-Adaptive Clinical Decision Gate (Single Major Innovation Feature)
+
+The **Evidence-Adaptive Clinical Decision Gate (EACDG)** is an integrated decision-gating layer added to the healthcare document-analysis pipeline. It evaluates whether a model-generated clinical prediction is sufficiently supported by the extracted and retrieved clinical evidence, rather than relying solely on machine learning model confidence.
+
+> **Core Principle:** *Model confidence is not necessarily the same as evidence sufficiency.*
+
+#### Position in the Existing Architecture
+
+| Stage | Function | Status |
+|---|---|---|
+| **Medical Document** | Input healthcare PDF / clinical document | Existing |
+| **Document Parsing** | Converts document into usable text (`PyPDF` / boundary-safe splitter) | Existing |
+| **LLM Symptom Extraction** | Exhaustively identifies physical symptoms and complaints from text | Existing |
+| **Semantic Symptom Mapping** | Maps extracted expressions to 230-feature clinical schema | Existing |
+| **ML Classifier** | Produces disease/class prediction and softmax confidence | Existing |
+| **Evidence-Adaptive Clinical Decision Gate** | **Evaluates evidence sufficiency before accepting the prediction** | **NEW SINGLE FEATURE** |
+| **RAG** | Retrieves relevant evidence chunks and supports the final response | Existing |
+
+#### Complete Data Flow
+
+```text
+Medical Document
+       ↓
+Document Parsing / Text Extraction
+       ↓
+LLM Symptom Extraction
+       ↓
+Semantic Symptom Mapping
+       ↓
+Structured Symptom Representation (230-dim vector x)
+       ↓
+Existing ML Classifier (Predictions & Softmax Probabilities)
+       ↓
+Evidence-Adaptive Clinical Decision Gate (EACDG)
+  ├── Sufficient Evidence   → [DIAGNOSE] Accept Prediction
+  ├── Borderline / Sparse   → [CLARIFY] Targeted Information-Gain Query
+  └── Insufficient Evidence → [ABSTAIN] Flag & Output Clinical Rationale
+       ↓
+RAG-supported Final Response
+```
+
+#### Core Components & Mathematical Formulations
 
 1. **Three-State Epistemic Symptom Classification:**
-   - **`SUPPORTED`**: High-confidence matches (Cosine $\ge 0.70$ or Difflib $> 0.90$, margin $\Delta > 0.04$) entering the diagnostic feature vector $x$.
-   - **`UNCERTAIN`**: Borderline matches ($0.58 \le \text{Cosine} < 0.70$ or margin near-ties $\Delta \le 0.04$) retained for evidence gating and targeted clarification.
-   - **`UNSUPPORTED`**: Described by patient but absent from the 230-feature schema ($< 0.58$ or anatomical conflict). Logged as honest schema gaps (e.g. photophobia, sensory aura) rather than silently force-mapped.
+   - **`SUPPORTED`**: High-confidence match ($\text{Cosine} \ge 0.70$ or $\text{Difflib} > 0.90$, margin $\Delta > 0.04$) entering the diagnostic feature vector $x$.
+   - **`UNCERTAIN`**: Borderline or near-tie match ($0.58 \le \text{Cosine} < 0.70$ or $\Delta \le 0.04$) retained for evidence gating and targeted clarification.
+   - **`UNSUPPORTED`**: Described by patient but absent from the 230-feature schema ($< 0.58$ or anatomical conflict). Logged as honest schema gaps (e.g., photophobia, sensory aura) rather than silently forced into false matches.
 
-2. **Distributional Sparsity Mismatch Metric ($S$ & $z$-score):**
+2. **Diagnostic Evidence Coverage Engine ($EC$):**
+   Measures how much of the evidence considered relevant to the predicted disease is supported by the patient's extracted symptoms:
+   $$\text{Evidence Coverage } (EC) = \left( \frac{\sum_{j \in \mathcal{H}_d} w_{d, j} \cdot \mathbb{I}(x_j = 1)}{\sum_{j \in \mathcal{H}_d} w_{d, j}} \right) \times 100$$
+   - Empirical conditional symptom frequencies $f_{d, j} = P(\text{symptom}_j = 1 \mid \text{disease} = d)$ are profiled across all 100 diseases from `Diseases_and_Symptoms_dataset.csv`.
+   - Hallmark features are indexed where $f_{d, j} \ge 0.40$ with hallmark weights $w_{d, j} = f_{d, j}$.
+
+3. **Distributional Sparsity Mismatch Metric ($S$ & $z$-score):**
    - Live vector sparsity: $S = 1 - \frac{\|x\|_0}{230}$.
    - Domain shift $z$-score relative to the SMOTE training distribution ($\mu = 5.87, \sigma = 1.67$):
      $$z_{\text{sparsity}} = \frac{\|x\|_0 - 5.87}{1.67}$$
    - Quantifies when sparse clinical presentations (1–3 complaints) are at risk of synthetic training density mismatch.
 
-3. **Diagnostic Evidence Coverage Engine ($EC$):**
-   - Profiles empirical conditional symptom frequencies $f_{d, j} = P(\text{symptom}_j = 1 \mid \text{disease} = d)$ across all 100 diseases from `Diseases_and_Symptoms_dataset.csv`.
-   - Computes weighted hallmark overlap ($f_{d, j} \ge 0.40$):
-     $$EC(d) = \frac{\sum_{j \in \mathcal{H}_d} w_{d, j} \cdot \mathbb{I}(x_j = 1)}{\sum_{j \in \mathcal{H}_d} w_{d, j}}$$
-   - Decouples statistical classifier probability from true clinical hallmark completeness (e.g. a 91% model probability for Hyperemesis Gravidarum with only 17.9% evidence coverage is caught and gated).
-
 4. **Adaptive Multi-Criteria Decision Gate ($T = f(S, A, C, N)$):**
-   - Dynamically transitions across three actionable states:
-     - `DIAGNOSE`: High confidence, evidence coverage $\ge 35\%$, and sufficient hallmark presence.
-     - `CLARIFY`: Plausible candidate with missing/uncertain hallmark features where an inquiry reduces ambiguity.
-     - `ABSTAIN`: Sub-floor confidence ($< 65\%$) or severe evidence deficit ($< 15\%$), returning an explicit auditable clinical rationale.
+   Decouples statistical classifier confidence from clinical evidence coverage and dynamically transitions across three actionable states:
+   - `DIAGNOSE`: High confidence, evidence coverage $\ge 35\%$, and at least 1 hallmark symptom present.
+   - `CLARIFY`: Moderate coverage ($15\% \le EC < 35\%$) or sparse domain mismatch where a follow-up query reduces uncertainty.
+   - `ABSTAIN`: Sub-floor confidence ($< 65\%$) or severe evidence deficit ($EC < 15\%$), returning an explicit auditable clinical rationale.
 
 5. **Discriminative Information-Gain Clarification Engine:**
-   - Evaluates hallmark divergence $|f_{d_1, j} - f_{d_2, j}|$ between top competing hypotheses.
-   - Generates a single targeted follow-up question that resolves ambiguity in one interaction.
+   - Evaluates hallmark divergence $|f_{d_1, j} - f_{d_2, j}|$ between top competing hypotheses $(d_1, d_2)$.
+   - Selects the single most discriminative missing hallmark feature and prompts the user with one-click `✓ Yes` / `✕ No` vector updating.
 
 6. **Self-Audited Clinical Synonym Pipeline (`audit_synonyms.py`):**
-   - Verification script that audits candidate synonyms against semantic drift corridors, token sanity, and cross-anatomical collisions.
-   - Outputs verified, versioned `approved_synonyms_v1.json` with cryptographic SHA-256 hash.
+   - Automated audit verifying candidate terms against semantic drift, anatomical conflict, and feature collisions.
+   - Outputs verified, versioned `approved_synonyms_v1.json` (467 approved terms, SHA-256: `800cc1914561`).
+
+#### Implementation Boundary
+
+- **Module Boundary:** The EACDG is an integrated decision layer (`backend/evidence_engine.py`) downstream of symptom extraction and ML classification. Existing extraction components remain responsible for producing symptoms; the gate consumes their outputs without re-parsing the document.
+- **Gate Inputs:** Predicted disease/class, classifier confidence, mapped patient symptoms (supported, uncertain, unsupported), disease hallmark profiles, and sparsity metrics.
+- **Gate Outputs:** Accepted prediction (`DIAGNOSE`), targeted clarification question (`CLARIFY`), or abstention decision (`ABSTAIN`) with full clinical evidence breakdown.
+
+#### Evaluation Metrics
+
+| Metric | Purpose |
+|---|---|
+| **Accuracy / Precision / Recall / F1** | Check predictive classification performance |
+| **Calibration Error / Brier Score** | Check probability confidence reliability |
+| **Evidence Coverage ($EC$)** | Quantify supporting clinical hallmark evidence available |
+| **Abstention Rate** | Measure rejection of insufficiently supported predictions |
+| **False-Positive Diagnosis Rate** | Measure reduction of overconfident, unsupported predictions |
+| **Uncertain / Unsupported Mapping Rate** | Measure semantic extraction & mapping quality |
+
+#### Project & Viva Positioning
+
+- **Main Project:** Context-Aware Retrieval-Augmented Generation Model for Intelligent Healthcare Document Analysis
+- **Single Major Innovation Feature:** Evidence-Adaptive Clinical Decision Gate (EACDG)
+- **Viva Explanation:** *"The proposed contribution is an evidence-adaptive decision-gating mechanism that determines whether a model-generated clinical prediction is sufficiently supported by the extracted and retrieved evidence, rather than relying solely on model confidence."*
+
 
 ## Known Problems & Solutions
 
