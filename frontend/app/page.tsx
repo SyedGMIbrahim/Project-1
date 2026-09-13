@@ -501,57 +501,56 @@ export default function Page() {
   }
 
   return (
-    <main className="min-h-screen bg-clinical-gradient text-ink-950">
+    <main className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-8 sm:px-6 lg:px-8">
-        <header className="mb-8 flex items-center justify-between rounded-3xl border border-plum-100 bg-white/80 px-5 py-4 shadow-soft backdrop-blur">
+        <header className="mb-8 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-plum-700">Local Clinical RAG</p>
-            <h1 className="mt-1 text-2xl font-semibold text-ink-950 sm:text-3xl">Clinical Document Intelligence</h1>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Local Clinical RAG</p>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Clinical Document Intelligence</h1>
           </div>
-          <div className="hidden rounded-full border border-plum-100 bg-plum-50 px-4 py-2 text-sm text-plum-800 sm:block">
+          <div className="hidden rounded-sm border border-slate-200 bg-slate-50 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 sm:block">
             100% local analysis
           </div>
         </header>
 
         {notification ? (
           <div
-            className={`mb-6 rounded-2xl border px-4 py-3 text-sm shadow-sm ${
-              notification.type === "success"
+            className={`mb-6 rounded-sm border px-4 py-3 text-sm shadow-sm ${notification.type === "success"
                 ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                 : notification.type === "info"
-                ? "border-plum-200 bg-plum-50 text-plum-800"
-                : "border-red-200 bg-red-50 text-red-700"
-            }`}
+                  ? "border-slate-300 bg-slate-50 text-sky-800"
+                  : "border-red-200 bg-red-50 text-red-700"
+              }`}
           >
             {notification.text}
           </div>
         ) : null}
 
         <section className="grid flex-1 gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="flex flex-col rounded-3xl border border-plum-100 bg-white/90 p-5 shadow-soft backdrop-blur sm:p-8">
+          <div className="flex flex-col border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
             <div className="mb-6">
-              <p className="text-sm font-medium text-plum-700">Ask a question</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-sky-700">Ask a question</p>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
                 Query the local medical record index and review the generated answer alongside the retrieved evidence.
               </p>
             </div>
 
-            <div className="mb-6 rounded-3xl border border-dashed border-plum-200 bg-plum-50/50 p-4">
+            <div className="mb-6 border border-dashed border-slate-300 bg-slate-50 p-6">
               <div
                 onDragEnter={() => setDragActive(true)}
                 onDragLeave={() => setDragActive(false)}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={handleDrop}
-                className={`rounded-2xl border-2 border-dashed p-5 text-center transition ${dragActive ? "border-plum-500 bg-white" : "border-plum-200 bg-white/80"}`}
+                className={`rounded-sm border-2 border-dashed p-5 text-center transition ${dragActive ? "border-slate-500 bg-white" : "border-slate-300 bg-white/80"}`}
               >
-                <p className="text-sm font-semibold text-ink-950">Upload Clinical File</p>
+                <p className="text-sm font-semibold text-slate-900">Upload Clinical File</p>
                 <p className="mt-1 text-sm text-slate-600">Drag and drop a .pdf or .txt document to index it locally.</p>
                 <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-plum-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-plum-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-2 rounded-sm bg-sky-700 px-5 py-2.5 text-[13px] font-bold tracking-wide text-white transition hover:bg-slate-800 disabled:opacity-50"
                   >
                     {uploading ? <Spinner /> : null}
                     {uploading ? "Processing..." : "Choose file"}
@@ -572,22 +571,22 @@ export default function Page() {
                 />
               </div>
               {uploading ? (
-                <div className="mt-3 rounded-2xl bg-plum-50 px-4 py-3 text-sm text-plum-800">Processing and indexing document...</div>
+                <div className="mt-3 rounded-sm bg-slate-50 px-4 py-3 text-sm text-sky-800">Processing and indexing document...</div>
               ) : null}
             </div>
 
-            <section className="mb-8 rounded-3xl border border-plum-100 bg-white p-5 shadow-sm">
+            <section className="mb-8 border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-semibold text-ink-950">Currently Indexed Datasets</h2>
+                  <h2 className="text-lg font-semibold text-slate-900">Currently Indexed Datasets</h2>
                   <p className="mt-1 text-sm text-slate-600">Documents available in the local Chroma index. Select an active report to scope your Q&A and summaries.</p>
                 </div>
-                {documentsLoading ? <span className="text-xs font-medium text-plum-700">Refreshing...</span> : null}
+                {documentsLoading ? <span className="text-[11px] font-bold uppercase text-sky-700">Refreshing...</span> : null}
               </div>
 
               {documents.length > 0 ? (
-                <div className="overflow-hidden rounded-2xl border border-plum-100">
-                  <div className="grid grid-cols-[1.2fr_1.2fr_0.7fr_0.8fr_0.8fr_0.9fr] gap-3 border-b border-plum-100 bg-plum-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-plum-700">
+                <div className="border border-slate-200">
+                  <div className="grid grid-cols-[1.2fr_1.2fr_0.7fr_0.8fr_0.8fr_0.9fr] gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                     <span>File</span>
                     <span>Source</span>
                     <span>Size</span>
@@ -595,7 +594,7 @@ export default function Page() {
                     <span>Indexed</span>
                     <span>Target Scope</span>
                   </div>
-                  <div className="divide-y divide-plum-100 bg-white">
+                  <div className="divide-y divide-slate-200 bg-white">
                     {documents.map((document) => {
                       const fileType = (document.file_type || "doc").toUpperCase();
                       const uploadDate = document.upload_date ? new Date(document.upload_date).toLocaleString() : "N/A";
@@ -603,13 +602,13 @@ export default function Page() {
                       const isActive = selectedDocument === document.file_name;
 
                       return (
-                        <div key={document.source_path ?? document.file_name} className={`grid grid-cols-[1.2fr_1.2fr_0.7fr_0.8fr_0.8fr_0.9fr] gap-3 px-4 py-3 text-sm items-center transition ${isActive ? "bg-plum-50/40" : ""}`}>
+                        <div key={document.source_path ?? document.file_name} className={`grid grid-cols-[1.2fr_1.2fr_0.7fr_0.8fr_0.8fr_0.9fr] gap-3 px-4 py-3 text-sm items-center transition ${isActive ? "bg-slate-50/40" : ""}`}>
                           <div className="flex items-start gap-3">
-                            <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-plum-50 text-xs font-bold text-plum-700 ring-1 ring-plum-100">
+                            <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-sm bg-slate-100 text-[10px] font-bold text-slate-700 ring-1 ring-slate-200">
                               {fileType}
                             </div>
                             <div>
-                              <p className="font-medium text-ink-950">{document.file_name}</p>
+                              <p className="font-medium text-slate-900">{document.file_name}</p>
                               <p className="text-xs text-slate-500">{uploadDate}</p>
                             </div>
                           </div>
@@ -618,21 +617,21 @@ export default function Page() {
                           </div>
                           <div className="text-slate-600">{fileSize}</div>
                           <div>
-                            <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                            <span className="inline-flex rounded-sm bg-emerald-50 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-700">
                               {document.status}
                             </span>
                           </div>
                           <div className="text-slate-600">{document.chunk_count ?? 0} chunks</div>
                           <div>
                             {isActive ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-plum-100 px-2.5 py-1 text-xs font-semibold text-plum-800 ring-1 ring-plum-300">
+                              <span className="inline-flex items-center gap-1 rounded-sm bg-sky-50 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-sky-700 ring-1 ring-sky-200">
                                 ✓ Active
                               </span>
                             ) : (
                               <button
                                 type="button"
                                 onClick={() => setSelectedDocument(document.file_name)}
-                                className="rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-plum-50 hover:text-plum-700 transition"
+                                className="rounded-sm bg-white px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900 transition"
                               >
                                 Set Active
                               </button>
@@ -644,29 +643,29 @@ export default function Page() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-plum-200 bg-plum-50/40 px-5 py-10 text-sm text-slate-500">
+                <div className="rounded-sm border border-dashed border-slate-300 bg-slate-50/40 px-5 py-10 text-sm text-slate-500">
                   No clinical datasets are currently indexed.
                 </div>
               )}
             </section>
 
             {selectedDocument ? (
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-plum-200 bg-plum-50/70 px-4 py-2.5 text-xs text-plum-900">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border border-sky-200 bg-sky-50 px-4 py-3 text-xs text-sky-900">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-plum-700">Target Report:</span>
-                  <span className="rounded-md bg-white px-2 py-0.5 font-mono text-[11px] font-semibold text-ink-950 ring-1 ring-plum-100">{selectedDocument}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-sky-700">Target Report:</span>
+                  <span className="rounded-sm bg-white px-2 py-1 font-mono text-[11px] font-bold text-sky-900 ring-1 ring-sky-200">{selectedDocument}</span>
                 </div>
                 <span className="text-slate-500">Strictly grounded • Uses data only in report • No hallucinations</span>
               </div>
             ) : null}
 
             <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className="font-medium text-slate-500">Quick Analysis:</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Quick Analysis:</span>
               <button
                 type="button"
                 onClick={() => void handleSummarize()}
                 disabled={loading || summarizing}
-                className="inline-flex items-center gap-1 rounded-xl bg-plum-100 px-3 py-1.5 font-semibold text-plum-800 transition hover:bg-plum-200 disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-sm bg-sky-700 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-sky-800 disabled:opacity-50"
               >
                 📋 Full Clinical Summary
               </button>
@@ -678,7 +677,7 @@ export default function Page() {
                   void handleSubmit(undefined, q);
                 }}
                 disabled={loading}
-                className="inline-flex items-center gap-1 rounded-xl bg-white px-3 py-1.5 font-medium text-slate-700 ring-1 ring-plum-200 transition hover:bg-plum-50 disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-sm bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50"
               >
                 🩸 Symptoms & Severity
               </button>
@@ -690,7 +689,7 @@ export default function Page() {
                   void handleSubmit(undefined, q);
                 }}
                 disabled={loading}
-                className="inline-flex items-center gap-1 rounded-xl bg-white px-3 py-1.5 font-medium text-slate-700 ring-1 ring-plum-200 transition hover:bg-plum-50 disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-sm bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50"
               >
                 🧪 Lab Results & Vitals
               </button>
@@ -702,7 +701,7 @@ export default function Page() {
                   void handleSubmit(undefined, q);
                 }}
                 disabled={loading}
-                className="inline-flex items-center gap-1 rounded-xl bg-white px-3 py-1.5 font-medium text-slate-700 ring-1 ring-plum-200 transition hover:bg-plum-50 disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-sm bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:opacity-50"
               >
                 💊 Documented Treatment Plan
               </button>
@@ -712,20 +711,20 @@ export default function Page() {
               <label htmlFor="query" className="sr-only">
                 Medical document query
               </label>
-              <div className="flex flex-col gap-3 rounded-3xl border border-plum-100 bg-plum-50/70 p-3 shadow-sm sm:flex-row">
+              <div className="flex flex-col gap-3 border border-slate-200 bg-slate-50 p-4 shadow-sm sm:flex-row">
                 <textarea
                   id="query"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   rows={3}
                   placeholder="e.g. In the report, if sugar is high and leg pain, what does the report state about severity and treatment?"
-                  className="min-h-[88px] flex-1 resize-none rounded-2xl border border-transparent bg-white px-4 py-3 text-base outline-none ring-0 placeholder:text-slate-400 focus:border-plum-300 focus:shadow-[0_0_0_4px_rgba(140,73,223,0.10)]"
+                  className="min-h-[88px] flex-1 resize-none rounded-sm border border-transparent bg-white px-4 py-3 text-base outline-none ring-0 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-sky-600 focus:border-sky-600"
                 />
                 <div className="flex flex-col gap-2 sm:min-w-[160px]">
                   <button
                     type="submit"
                     disabled={!canSubmit}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-plum-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-plum-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 rounded-sm bg-slate-900 px-5 py-2.5 text-[13px] font-bold tracking-wide text-white transition hover:bg-slate-800 disabled:opacity-50"
                   >
                     {loading && !summarizing ? <Spinner /> : null}
                     {loading && !summarizing ? "Searching..." : "Query report"}
@@ -734,7 +733,7 @@ export default function Page() {
                     type="button"
                     onClick={() => void handleSummarize()}
                     disabled={loading || summarizing}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-3 py-2 text-xs font-semibold text-plum-800 ring-1 ring-plum-300 transition hover:bg-plum-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 rounded-sm bg-white px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-700 ring-1 ring-slate-300 transition hover:bg-slate-50 disabled:opacity-50"
                   >
                     {summarizing ? <Spinner /> : null}
                     {summarizing ? "Summarizing..." : "📋 Summarize"}
@@ -743,48 +742,48 @@ export default function Page() {
               </div>
             </form>
 
-            <div className="flex-1 rounded-3xl border border-plum-100 bg-white p-5">
+            <div className="flex-1 border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-ink-950">Generated answer</h2>
-                {loading ? <span className="text-sm text-plum-700">Analyzing local sources...</span> : null}
+                <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">GENERATED ANSWER</h2>
+                {loading ? <span className="text-[11px] font-bold uppercase tracking-widest text-sky-700">Analyzing sources...</span> : null}
               </div>
 
               {error ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                   {error}
                 </div>
               ) : answer ? (
-                <p className="whitespace-pre-wrap text-[15px] leading-7 text-slate-700">{answer}</p>
+                <p className="whitespace-pre-wrap font-serif text-[15px] leading-7 text-slate-900">{answer}</p>
               ) : (
-                <div className="rounded-2xl border border-dashed border-plum-200 bg-plum-50/40 px-5 py-10 text-sm text-slate-500">
+                <div className="rounded-sm border border-dashed border-slate-300 bg-slate-50/40 px-5 py-10 text-sm text-slate-500">
                   The answer will appear here after a query is submitted.
                 </div>
               )}
             </div>
           </div>
 
-          <div className="mt-8 rounded-3xl border border-plum-100 bg-white/90 p-5 shadow-soft backdrop-blur sm:p-6">
+          <div className="mt-8 border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-4">
-              <h3 className="text-xl font-semibold text-ink-950">Symptom Checker</h3>
+              <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">SYMPTOM CHECKER & DIAGNOSTIC GATE</h3>
               <p className="mt-1 text-sm text-slate-600">Select symptoms manually or use AI extraction from text and indexed clinical documents.</p>
             </div>
 
-            <div className="rounded-2xl border border-plum-100 bg-plum-50/40 p-4">
-              <label htmlFor="nl-symptoms" className="mb-2 block text-sm font-medium text-plum-800">Describe symptoms naturally</label>
+            <div className="rounded-sm border border-slate-200 bg-slate-50/40 p-4">
+              <label htmlFor="nl-symptoms" className="mb-2 block text-sm font-medium text-sky-800">Describe symptoms naturally</label>
               <textarea
                 id="nl-symptoms"
                 value={nlText}
                 onChange={(e) => setNlText(e.target.value)}
                 rows={3}
                 placeholder="Describe symptoms naturally..."
-                className="min-h-[88px] w-full resize-none rounded-2xl border border-plum-100 bg-white px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-plum-300 focus:outline-none focus:shadow-[0_0_0_4px_rgba(140,73,223,0.10)]"
+                className="min-h-[88px] w-full resize-none rounded-sm border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-sky-600"
               />
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => void handleExtractFromText()}
-                  className="inline-flex items-center justify-center rounded-xl bg-plum-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-plum-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={extractingFromText}
                 >
                   {extractingFromText ? "Extracting..." : "🪄 Auto-Select from Text"}
@@ -792,7 +791,7 @@ export default function Page() {
                 <button
                   type="button"
                   onClick={() => void handleExtractFromDocs()}
-                  className="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-plum-800 ring-1 ring-plum-200 transition hover:bg-plum-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded bg-white px-4 py-2 text-sm font-semibold text-sky-800 ring-1 ring-slate-300 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={extractingFromDocs}
                 >
                   {extractingFromDocs ? "Extracting..." : "📄 Extract from Uploaded Docs"}
@@ -808,18 +807,18 @@ export default function Page() {
             </div>
 
             <div className="mt-4">
-              <label htmlFor="symptom-search" className="mb-2 block text-sm font-medium text-plum-800">Search and add symptoms</label>
+              <label htmlFor="symptom-search" className="mb-2 block text-sm font-medium text-sky-800">Search and add symptoms</label>
               <input
                 id="symptom-search"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Type symptom name..."
-                className="w-full rounded-2xl border border-plum-100 bg-white px-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-plum-300 focus:outline-none focus:shadow-[0_0_0_4px_rgba(140,73,223,0.10)]"
+                className="w-full rounded-sm border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-600 focus:border-sky-600"
               />
             </div>
 
             {searchTerm.trim() ? (
-              <div className="mt-3 max-h-60 overflow-y-auto rounded-2xl border border-plum-100 bg-white p-2">
+              <div className="mt-3 max-h-60 overflow-y-auto rounded-sm border border-slate-200 bg-white p-2">
                 {symptomSuggestions.length === 0 ? (
                   <div className="px-3 py-2 text-sm text-slate-500">No matching symptoms found.</div>
                 ) : (
@@ -829,7 +828,7 @@ export default function Page() {
                         <button
                           type="button"
                           onClick={() => addSymptom(symptom)}
-                          className="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-plum-50"
+                          className="w-full rounded px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50"
                         >
                           {symptom}
                         </button>
@@ -841,42 +840,42 @@ export default function Page() {
             ) : null}
 
             {/* ── 3-State Symptom Epistemic Categorization ── */}
-            <div className="mt-3 space-y-3">
+            <div className="mt-4 space-y-4 font-sans">
               {/* State 1: SUPPORTED Symptoms (Enters Diagnostic Vector) */}
-              <div className="rounded-2xl border border-plum-100 bg-white p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
-                    Supported Symptoms (Active in Vector: {selectedSymptoms.length})
+              <div className="rounded-sm border border-slate-300 bg-slate-50 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-900">
+                    Supported Evidence ({selectedSymptoms.length})
                   </span>
                   {selectedSymptoms.length > 0 ? (
                     <button
                       type="button"
                       onClick={() => setSelectedSymptoms([])}
-                      className="text-xs text-slate-400 hover:text-slate-600"
+                      className="text-[11px] font-semibold text-slate-500 hover:text-slate-900"
                     >
-                      Clear all
+                      CLEAR ALL
                     </button>
                   ) : null}
                 </div>
                 {availableSymptoms.length === 0 ? (
-                  <div className="rounded-xl bg-plum-50 px-3 py-3 text-sm text-slate-500">Loading clinical schema...</div>
+                  <div className="text-sm text-slate-500">Loading clinical schema...</div>
                 ) : selectedSymptoms.length === 0 ? (
-                  <div className="rounded-xl bg-plum-50 px-3 py-3 text-sm text-slate-500">No supported symptoms active yet.</div>
+                  <div className="text-sm text-slate-500">No supported symptoms active.</div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {selectedSymptoms.map((symptom) => (
                       <span
                         key={symptom}
-                        className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-900 ring-1 ring-emerald-200"
+                        className="inline-flex items-center gap-2 rounded-sm border border-slate-300 bg-white px-2.5 py-1 text-[13px] font-medium text-slate-900 shadow-sm"
                       >
                         <span>{symptom}</span>
                         <button
                           type="button"
                           onClick={() => removeSymptom(symptom)}
-                          className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100"
+                          className="font-bold text-slate-400 hover:text-slate-800"
                           aria-label={`Remove ${symptom}`}
                         >
-                          X
+                          ✕
                         </button>
                       </span>
                     ))}
@@ -886,26 +885,26 @@ export default function Page() {
 
               {/* State 2: UNCERTAIN Symptoms (Near-Tie / Moderate Similarity) */}
               {uncertainSymptoms.length > 0 ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-amber-800">
-                      Borderline / Uncertain Symptoms ({uncertainSymptoms.length})
+                <div className="rounded-sm border border-dashed border-amber-400 bg-amber-50 p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-900">
+                      ⚠️ Uncertain Findings ({uncertainSymptoms.length})
                     </span>
-                    <span className="text-[11px] text-amber-600">Near-tie or moderate confidence</span>
+                    <span className="text-[11px] font-medium text-amber-700">Near-tie or moderate confidence</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {uncertainSymptoms.map((sym) => (
                       <span
                         key={sym}
-                        className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-amber-900 ring-1 ring-amber-300"
+                        className="inline-flex items-center gap-2 rounded-sm border border-amber-300 bg-white px-2.5 py-1 text-[13px] font-medium text-amber-900 shadow-sm"
                       >
                         <span>{sym}</span>
                         <button
                           type="button"
                           onClick={() => promoteUncertainSymptom(sym)}
-                          className="rounded-full bg-amber-600 px-2 py-0.5 text-xs font-semibold text-white hover:bg-amber-700"
+                          className="rounded-sm bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold text-amber-800 hover:bg-amber-200"
                         >
-                          + Confirm
+                          CONFIRM
                         </button>
                       </span>
                     ))}
@@ -915,23 +914,17 @@ export default function Page() {
 
               {/* State 3: UNSUPPORTED Symptoms (Described in text but unrepresented in schema) */}
               {unsupportedSymptoms.length > 0 ? (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-700">
-                      Described but Unmapped Findings ({unsupportedSymptoms.length})
-                    </span>
-                    <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-                      Honest Abstention · Schema Gap
+                <div className="pt-2">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                      Dropped / Unmapped ({unsupportedSymptoms.length})
                     </span>
                   </div>
-                  <p className="mb-2 text-xs text-slate-500">
-                    Documented by patient/doctor but not in the 230-feature dataset schema. Preserved rather than force-mapped.
-                  </p>
                   <div className="flex flex-wrap gap-2">
                     {unsupportedSymptoms.map((sym) => (
                       <span
                         key={sym}
-                        className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-300"
+                        className="text-[13px] font-medium text-slate-400 line-through"
                       >
                         {sym}
                       </span>
@@ -942,29 +935,23 @@ export default function Page() {
 
               {/* State 4: DENIED / ABSENT Symptoms (Explicitly confirmed absent by user) */}
               {deniedSymptoms.length > 0 ? (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-700">
-                      Confirmed Absent Findings ({deniedSymptoms.length})
-                    </span>
-                    <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
-                      Clarified Absent
+                <div className="pt-2">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                      Confirmed Absent ({deniedSymptoms.length})
                     </span>
                   </div>
-                  <p className="mb-2 text-xs text-slate-500">
-                    Excluded from diagnostic hallmark matching following user clarification.
-                  </p>
                   <div className="flex flex-wrap gap-2">
                     {deniedSymptoms.map((sym) => (
                       <span
                         key={sym}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 line-through ring-1 ring-slate-300"
+                        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-400 line-through"
                       >
                         <span>{sym}</span>
                         <button
                           type="button"
                           onClick={() => removeDeniedSymptom(sym)}
-                          className="font-bold text-slate-400 hover:text-rose-600"
+                          className="font-bold text-slate-300 hover:text-slate-600"
                           title="Unmark absent"
                         >
                           ✕
@@ -977,141 +964,128 @@ export default function Page() {
             </div>
 
             {/* ── Run Diagnosis Trigger & Evidence-Adaptive Result Panel ── */}
-            <div className="mt-5 space-y-4">
+            <div className="mt-8 border-t border-slate-200 pt-6 font-sans">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => void handleDiagnose()}
-                  className="inline-flex items-center justify-center rounded-xl bg-plum-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-plum-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-sm bg-sky-700 px-6 py-2.5 text-[13px] font-bold tracking-wide text-white hover:bg-sky-800 disabled:opacity-50"
                   disabled={diagnosisLoading}
                 >
-                  {diagnosisLoading ? "Evaluating Evidence..." : "Run Evidence-Adaptive Diagnosis"}
+                  {diagnosisLoading ? "COMPUTING..." : "COMPUTE DIAGNOSIS"}
                 </button>
               </div>
 
               {diagnosisResult ? (
                 <div
-                  className={`rounded-3xl border p-5 shadow-sm transition-all ${
-                    diagnosisResult.decision === "DIAGNOSE"
-                      ? "border-emerald-200 bg-emerald-50/40"
+                  className={`mt-6 rounded-sm border p-6 transition-all ${diagnosisResult.decision === "DIAGNOSE"
+                      ? "border-emerald-300 bg-white shadow-[0_4px_0_0_#6ee7b7]"
                       : diagnosisResult.decision === "CLARIFY"
-                      ? "border-amber-200 bg-amber-50/40"
-                      : "border-slate-200 bg-slate-50/60"
-                  }`}
+                        ? "border-amber-300 bg-white shadow-[0_4px_0_0_#fcd34d]"
+                        : "border-slate-800 bg-slate-900 shadow-[0_4px_0_0_#0f172a]"
+                    }`}
                 >
                   {/* Decision Header */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase ${
-                          diagnosisResult.decision === "DIAGNOSE"
-                            ? "bg-emerald-600 text-white"
-                            : diagnosisResult.decision === "CLARIFY"
-                            ? "bg-amber-600 text-white"
-                            : "bg-slate-700 text-white"
-                        }`}
-                      >
-                        Decision: {diagnosisResult.decision}
-                      </span>
-                      <span className="text-xs font-medium text-slate-600">
-                        {diagnosisResult.decision === "DIAGNOSE"
-                          ? "Sufficient Evidence Grounding"
+                  <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-200/20 pb-4">
+                    <div>
+                      <div className={`text-[11px] font-bold tracking-widest ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-400" : "text-slate-500"}`}>
+                        DECISION GATE
+                      </div>
+                      <div className={`mt-1 text-2xl font-black tracking-tight ${diagnosisResult.decision === "DIAGNOSE"
+                          ? "text-emerald-700"
                           : diagnosisResult.decision === "CLARIFY"
-                          ? "Targeted Information-Gain Opportunity"
-                          : "Honest Clinical Abstention"}
-                      </span>
+                            ? "text-amber-700"
+                            : "text-white"
+                        }`}>
+                        {diagnosisResult.decision}
+                      </div>
                     </div>
 
                     <button
                       type="button"
-                      className="text-xs font-semibold text-plum-700 underline underline-offset-2 hover:text-plum-900"
+                      className={`text-[12px] font-semibold underline underline-offset-4 ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-300 hover:text-white" : "text-sky-700 hover:text-sky-900"}`}
                       onClick={() => void searchGuidelines(diagnosisResult.predicted)}
                     >
-                      Search Guidelines for &ldquo;{diagnosisResult.predicted}&rdquo;
+                      Search Guidelines
                     </button>
                   </div>
 
                   {/* Primary Prediction Label */}
-                  <div className="mt-3">
-                    <div className="text-lg font-bold text-ink-950">
+                  <div className="mt-5">
+                    <div className={`text-[11px] font-bold tracking-widest ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-400" : "text-slate-500"}`}>
+                      TOP PREDICTION
+                    </div>
+                    <div className={`mt-1 text-xl font-bold ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-200" : "text-slate-900"}`}>
                       {diagnosisResult.predicted}
                     </div>
                   </div>
 
                   {/* Dual Comparison Gauges: Model Probability vs Evidence Coverage */}
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="mt-6 grid gap-6 sm:grid-cols-2">
                     {/* Gauge 1: Model Softmax Probability */}
-                    <div className="rounded-2xl border border-plum-100 bg-white p-3.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-700">Model Probability</span>
-                        <span className="font-bold text-plum-700">{Math.round(diagnosisResult.probability * 100)}%</span>
+                    <div>
+                      <div className="flex items-end justify-between">
+                        <span className={`text-[11px] font-bold tracking-widest ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-400" : "text-slate-500"}`}>PROBABILITY</span>
+                        <span className={`font-mono text-xl font-bold ${diagnosisResult.decision === "ABSTAIN" ? "text-white" : "text-slate-900"}`}>{Math.round(diagnosisResult.probability * 100)}%</span>
                       </div>
-                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div className={`mt-2 h-1.5 w-full bg-slate-200 ${diagnosisResult.decision === "ABSTAIN" ? "bg-slate-700" : ""}`}>
                         <div
-                          className="h-full bg-plum-600 transition-all duration-500"
+                          className={`h-full ${diagnosisResult.decision === "ABSTAIN" ? "bg-white" : "bg-sky-600"}`}
                           style={{ width: `${Math.min(100, Math.round(diagnosisResult.probability * 100))}%` }}
                         />
                       </div>
-                      <p className="mt-1.5 text-[11px] text-slate-400">Classifier ensemble softmax score</p>
                     </div>
 
                     {/* Gauge 2: Diagnostic Evidence Coverage */}
-                    <div className="rounded-2xl border border-plum-100 bg-white p-3.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-700">Diagnostic Evidence Coverage</span>
-                        <span className="font-bold text-emerald-700">
+                    <div>
+                      <div className="flex items-end justify-between">
+                        <span className={`text-[11px] font-bold tracking-widest ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-400" : "text-slate-500"}`}>EVIDENCE COVERAGE</span>
+                        <span className={`font-mono text-xl font-bold ${diagnosisResult.decision === "ABSTAIN" ? "text-white" : "text-slate-900"}`}>
                           {Math.round((diagnosisResult.evidence_coverage || 0) * 100)}%
                         </span>
                       </div>
-                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div className={`mt-2 h-1.5 w-full bg-slate-200 ${diagnosisResult.decision === "ABSTAIN" ? "bg-slate-700" : ""}`}>
                         <div
-                          className={`h-full transition-all duration-500 ${
-                            (diagnosisResult.evidence_coverage || 0) >= 0.35 ? "bg-emerald-600" : "bg-amber-500"
-                          }`}
+                          className={`h-full ${(diagnosisResult.evidence_coverage || 0) >= 0.35 ? (diagnosisResult.decision === "ABSTAIN" ? "bg-emerald-400" : "bg-emerald-600") : (diagnosisResult.decision === "ABSTAIN" ? "bg-amber-400" : "bg-amber-500")
+                            }`}
                           style={{ width: `${Math.min(100, Math.round((diagnosisResult.evidence_coverage || 0) * 100))}%` }}
                         />
                       </div>
-                      <p className="mt-1.5 text-[11px] text-slate-400">
-                        Weighted hallmark overlap from dataset ground truth
-                      </p>
                     </div>
                   </div>
 
                   {/* Vector Sparsity Information */}
-                  <div className="mt-3 flex items-center justify-between rounded-xl bg-white/70 px-3.5 py-2 text-xs text-slate-600">
+                  <div className={`mt-6 flex items-center justify-between border-t py-3 text-[12px] ${diagnosisResult.decision === "ABSTAIN" ? "border-slate-700 text-slate-400" : "border-slate-200 text-slate-600"}`}>
                     <span>
-                      Active Presentation: <strong>{diagnosisResult.active_symptom_count}</strong> symptoms (Sparsity:{" "}
-                      <strong>{(diagnosisResult.sparsity_score * 100).toFixed(1)}%</strong>)
-                    </span>
-                    <span className="text-[11px] text-slate-500">
-                      Training domain shift: z ={" "}
-                      {diagnosisResult.evidence_details?.sparsity_metrics?.z_score ?? "0.0"}
+                      ACTIVE SYMPTOMS: <span className={`font-mono font-bold ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-300" : "text-slate-900"}`}>{diagnosisResult.active_symptom_count}</span>
+                      <span className="mx-3 opacity-50">|</span>
+                      SPARSITY: <span className={`font-mono font-bold ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-300" : "text-slate-900"}`}>{(diagnosisResult.sparsity_score * 100).toFixed(1)}%</span>
                     </span>
                   </div>
 
                   {/* Clarification Box (when CLARIFY is triggered) */}
                   {diagnosisResult.decision === "CLARIFY" && diagnosisResult.clarification_question ? (
-                    <div className="mt-4 rounded-2xl border border-amber-300 bg-white p-4 shadow-sm">
-                      <div className="flex items-center gap-2 text-xs font-bold text-amber-800">
-                        <span>🎯 Targeted Clarification Question (Information Gain):</span>
+                    <div className="mt-4 rounded-sm border border-amber-300 bg-amber-50 p-5">
+                      <div className="text-[11px] font-bold tracking-widest text-amber-900">
+                        TARGETED CLARIFICATION REQUIRED
                       </div>
-                      <p className="mt-2 text-sm font-semibold text-slate-800">
+                      <p className="mt-2 text-[14px] font-medium text-slate-900">
                         {diagnosisResult.clarification_question}
                       </p>
-                      <div className="mt-3 flex gap-2">
+                      <div className="mt-4 flex gap-3">
                         <button
                           type="button"
                           onClick={() => handleClarificationResponse(true)}
-                          className="rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                          className="rounded-sm bg-slate-900 px-4 py-2 text-[12px] font-bold text-white hover:bg-slate-800"
                         >
-                          ✓ Yes, I have this symptom
+                          YES, PRESENT
                         </button>
                         <button
                           type="button"
                           onClick={() => handleClarificationResponse(false)}
-                          className="rounded-xl bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
+                          className="rounded-sm border border-slate-300 bg-white px-4 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-50"
                         >
-                          ✕ No, symptom is absent
+                          NO, ABSENT
                         </button>
                       </div>
                     </div>
@@ -1119,11 +1093,11 @@ export default function Page() {
 
                   {/* Abstention Rationale Box (when ABSTAIN is triggered) */}
                   {diagnosisResult.decision === "ABSTAIN" && diagnosisResult.abstention_reason ? (
-                    <div className="mt-4 rounded-2xl border border-rose-200 bg-white p-4 shadow-sm">
-                      <div className="text-xs font-bold text-rose-800">
-                        🛡️ Clinical Decision Rationale:
+                    <div className="mt-4 rounded-sm border border-slate-700 bg-slate-800 p-5">
+                      <div className="text-[11px] font-bold tracking-widest text-rose-400">
+                        CLINICAL DECISION RATIONALE
                       </div>
-                      <p className="mt-1.5 text-xs leading-5 text-slate-700">
+                      <p className="mt-2 text-[13px] leading-relaxed text-slate-300">
                         {diagnosisResult.abstention_reason}
                       </p>
                     </div>
@@ -1131,58 +1105,42 @@ export default function Page() {
 
                   {/* Hallmark Symptom Verification Details */}
                   {diagnosisResult.evidence_details ? (
-                    <details className="mt-4 rounded-2xl border border-slate-200 bg-white p-3.5 open:bg-white text-xs">
-                      <summary className="cursor-pointer font-semibold text-slate-700">
-                        View Disease Hallmark Evidence Breakdown
+                    <details className={`mt-5 text-[13px] ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-300" : "text-slate-700"}`}>
+                      <summary className={`cursor-pointer font-semibold outline-none hover:opacity-80 ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-200" : "text-slate-900"}`}>
+                        [+] SHOW EVIDENCE BREAKDOWN
                       </summary>
-                      <div className="mt-3 space-y-3 pt-2 border-t border-slate-100">
+                      <div className={`mt-4 space-y-4 border-l-2 pl-4 ${diagnosisResult.decision === "ABSTAIN" ? "border-slate-700" : "border-slate-200"}`}>
                         <div>
-                          <span className="font-semibold text-emerald-800">Present Hallmarks:</span>
-                          <div className="mt-1 flex flex-wrap gap-1.5">
+                          <span className={`text-[11px] font-bold tracking-widest uppercase ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-400" : "text-slate-500"}`}>Present Hallmarks</span>
+                          <div className="mt-2 flex flex-wrap gap-2">
                             {diagnosisResult.evidence_details.present_hallmarks.length > 0 ? (
                               diagnosisResult.evidence_details.present_hallmarks.map((h) => (
                                 <span
                                   key={h.symptom}
-                                  className="rounded-md bg-emerald-50 px-2 py-0.5 text-emerald-800 ring-1 ring-emerald-200"
+                                  className={`rounded-sm border px-2 py-0.5 ${diagnosisResult.decision === "ABSTAIN" ? "border-slate-600 bg-slate-700 text-slate-200" : "border-slate-200 bg-white text-slate-800"}`}
                                 >
-                                  {h.symptom} (freq {Math.round(h.weight * 100)}%)
+                                  {h.symptom} <span className="font-mono text-[11px] opacity-70">({Math.round(h.weight * 100)}%)</span>
                                 </span>
                               ))
                             ) : (
-                              <span className="text-slate-400">None present in current vector</span>
+                              <span className="text-slate-500">None present in current vector</span>
                             )}
                           </div>
                         </div>
 
                         <div>
-                          <span className="font-semibold text-amber-800">Key Hallmarks Missing:</span>
-                          <div className="mt-1 flex flex-wrap gap-1.5">
+                          <span className={`text-[11px] font-bold tracking-widest uppercase ${diagnosisResult.decision === "ABSTAIN" ? "text-slate-400" : "text-slate-500"}`}>Missing Hallmarks</span>
+                          <div className="mt-2 flex flex-wrap gap-2">
                             {diagnosisResult.evidence_details.missing_hallmarks.slice(0, 4).map((h) => (
                               <span
                                 key={h.symptom}
-                                className="rounded-md bg-amber-50 px-2 py-0.5 text-amber-800 ring-1 ring-amber-200"
+                                className={`rounded-sm border px-2 py-0.5 opacity-80 ${diagnosisResult.decision === "ABSTAIN" ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}
                               >
-                                {h.symptom} (freq {Math.round(h.weight * 100)}%)
+                                {h.symptom} <span className="font-mono text-[11px] opacity-70">({Math.round(h.weight * 100)}%)</span>
                               </span>
                             ))}
                           </div>
                         </div>
-
-                        {deniedSymptoms.length > 0 ? (
-                          <div>
-                            <span className="font-semibold text-rose-700">Confirmed Absent Hallmarks:</span>
-                            <div className="mt-1 flex flex-wrap gap-1.5">
-                              {deniedSymptoms.map((sym) => (
-                                <span
-                                  key={sym}
-                                  className="rounded-md bg-rose-50 px-2 py-0.5 text-rose-700 line-through ring-1 ring-rose-200"
-                                >
-                                  {sym}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
                       </div>
                     </details>
                   ) : null}
@@ -1191,13 +1149,13 @@ export default function Page() {
             </div>
           </div>
 
-          <aside className="rounded-3xl border border-plum-100 bg-white/90 p-5 shadow-soft backdrop-blur sm:p-8">
+          <aside className="border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-ink-950">Evidence panel</h2>
+                <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">EVIDENCE PANEL</h2>
                 <p className="mt-1 text-sm text-slate-600">Retrieved source chunks from the local vector store.</p>
               </div>
-              <span className="rounded-full bg-plum-50 px-3 py-1 text-xs font-semibold text-plum-700">
+              <span className="rounded-sm bg-slate-100 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-slate-600">
                 Top {sources.length || 3}
               </span>
             </div>
@@ -1210,23 +1168,23 @@ export default function Page() {
                   const pageLabel = typeof page === "number" ? `Page ${page}` : "";
 
                   return (
-                    <details key={`${fileName}-${index}`} className="group rounded-2xl border border-plum-100 bg-plum-50/40 p-4 open:bg-white">
-                      <summary className="cursor-pointer list-none text-sm font-semibold text-ink-950">
+                    <details key={`${fileName}-${index}`} className="group rounded-sm border border-slate-200 bg-slate-50 p-4 open:bg-white shadow-sm">
+                      <summary className="cursor-pointer list-none text-sm font-semibold text-slate-900">
                         <div className="flex items-start justify-between gap-3">
                           <span>{fileName}</span>
-                          <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-plum-700 ring-1 ring-plum-100">
+                          <span className="rounded-sm bg-white px-2 py-1 font-mono text-[10px] font-bold text-slate-600 ring-1 ring-slate-200">
                             Chunk {index + 1}
                           </span>
                         </div>
                         <div className="mt-1 text-xs font-normal text-slate-500">{pageLabel || "Document evidence"}</div>
                       </summary>
-                      <div className="mt-3 rounded-2xl border border-plum-100 bg-white p-4">
+                      <div className="mt-3 rounded-sm border border-slate-200 bg-white p-4">
                         <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{source.content}</p>
                         {Object.keys(source.metadata).length > 0 ? (
-                          <dl className="mt-4 grid gap-2 rounded-xl bg-plum-50 p-3 text-xs text-slate-600 sm:grid-cols-2">
+                          <dl className="mt-4 grid gap-2 rounded bg-slate-50 p-3 text-xs text-slate-600 sm:grid-cols-2">
                             {Object.entries(source.metadata).map(([key, value]) => (
                               <div key={key}>
-                                <dt className="font-semibold text-plum-800">{key}</dt>
+                                <dt className="font-semibold text-sky-800">{key}</dt>
                                 <dd className="break-words">{String(value)}</dd>
                               </div>
                             ))}
@@ -1237,7 +1195,7 @@ export default function Page() {
                   );
                 })
               ) : (
-                <div className="rounded-2xl border border-dashed border-plum-200 bg-plum-50/40 px-5 py-10 text-sm text-slate-500">
+                <div className="rounded-sm border border-dashed border-slate-300 bg-slate-50/40 px-5 py-10 text-sm text-slate-500">
                   Evidence chunks will appear here after the backend returns the top 3 matches.
                 </div>
               )}
